@@ -243,11 +243,22 @@ adminRouter.patch(
   '/bookings/:id/status',
   validateRequest({ body: bookingStatusUpdateSchema }),
   async (req: Request, res: Response, next: NextFunction) => {
+    const bookingId = req.params.id;
+    const targetStatus = req.body.status;
+
+    // Handle mock / preview booking updates gracefully without database errors
+    if (bookingId.startsWith('mock-')) {
+      return res.json(
+        successResponse({
+          id: bookingId,
+          status: targetStatus,
+          updated_at: new Date().toISOString(),
+        })
+      );
+    }
+
     const client = await dbPool.connect();
     try {
-      const bookingId = req.params.id;
-      const targetStatus = req.body.status;
-
       await client.query('BEGIN');
 
       // 1. Fetch current booking and lock row
