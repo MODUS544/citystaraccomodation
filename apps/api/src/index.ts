@@ -48,7 +48,7 @@ app.get('/', (_req, res) => {
 });
 
 // 3. API Version 1 Routes
-app.use(env.API_PREFIX, apiRouter);
+app.use(env.API_PREFIX || '/api/v1', apiRouter);
 
 // 4. Catch-All & Global Error Handling
 app.use(notFoundHandler);
