@@ -47,7 +47,7 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
         const totalRooms = roomMetrics.total_rooms || 1;
         const occupiedRooms = roomMetrics.occupied_rooms || 0;
         const occupancyRate = parseFloat(((occupiedRooms / totalRooms) * 100).toFixed(1));
-        // 2. Today's Expected Check-ins and Check-outs
+        // 2. Today's Expected Check-ins, Check-outs, and Active Reservations
         const todayActionMetricsResult = await database_1.dbPool.query(`
       SELECT 
         COUNT(*) FILTER (
@@ -57,7 +57,13 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
         COUNT(*) FILTER (
           WHERE check_out_date = CURRENT_DATE 
             AND status = 'checked_in'
-        )::int AS check_outs_today
+        )::int AS check_outs_today,
+        COUNT(*) FILTER (
+          WHERE status = 'pending'
+        )::int AS pending_bookings,
+        COUNT(*) FILTER (
+          WHERE status IN ('confirmed', 'pending', 'checked_in')
+        )::int AS active_bookings
       FROM public.bookings;
     `);
         const todayMetrics = todayActionMetricsResult.rows[0];
@@ -75,7 +81,8 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
       FROM public.bookings;
     `);
         const revenueMetrics = revenueMetricsResult.rows[0];
-        // 4. Immediate Action List (Today's Pending Arrivals & Departures)
+        // 4. Live Reservations & Front Desk Operations Action List
+        // Prioritizes today's check-ins/check-outs, followed by newly submitted pending bookings, and active stays
         const actionListResult = await database_1.dbPool.query(`
       SELECT 
         b.id,
@@ -86,6 +93,7 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
         b.total_amount,
         b.status,
         b.special_requests,
+        b.created_at,
         p.full_name AS guest_name,
         p.email AS guest_email,
         p.phone_number AS guest_phone,
@@ -97,17 +105,19 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
       JOIN public.profiles p ON b.guest_id = p.id
       JOIN public.rooms r ON b.room_id = r.id
       JOIN public.room_types rt ON r.room_type_id = rt.id
-      WHERE (b.check_in_date = CURRENT_DATE AND b.status IN ('confirmed', 'pending'))
-         OR (b.check_out_date = CURRENT_DATE AND b.status = 'checked_in')
-         OR (b.check_in_date <= CURRENT_DATE AND b.check_out_date >= CURRENT_DATE AND b.status = 'checked_in')
+      WHERE b.status IN ('pending', 'confirmed', 'checked_in')
+         OR b.created_at >= CURRENT_DATE - INTERVAL '30 days'
       ORDER BY 
         CASE 
           WHEN b.check_in_date = CURRENT_DATE AND b.status IN ('confirmed', 'pending') THEN 1
           WHEN b.check_out_date = CURRENT_DATE AND b.status = 'checked_in' THEN 2
-          ELSE 3
+          WHEN b.status = 'pending' THEN 3
+          WHEN b.status = 'confirmed' THEN 4
+          WHEN b.status = 'checked_in' THEN 5
+          ELSE 6
         END,
-        b.check_in_date ASC
-      LIMIT 20;
+        b.created_at DESC
+      LIMIT 50;
     `);
         res.json((0, api_response_1.successResponse)({
             kpis: {
@@ -119,6 +129,8 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
                 occupancyRate,
                 checkInsToday: todayMetrics.check_ins_today,
                 checkOutsToday: todayMetrics.check_outs_today,
+                pendingBookings: todayMetrics.pending_bookings,
+                activeBookings: todayMetrics.active_bookings,
                 monthToDateRevenue: parseFloat(revenueMetrics.mtd_revenue),
                 yearToDateRevenue: parseFloat(revenueMetrics.ytd_revenue),
             },

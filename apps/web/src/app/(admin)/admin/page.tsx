@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import Link from 'next/link';
 import {
   Bed,
   DollarSign,
@@ -14,13 +15,15 @@ import {
   Users,
   Clock,
   Sparkles,
+  ExternalLink,
+  Check,
 } from 'lucide-react';
 import { fetchAdminOverview, updateBookingStatus, AdminActionBooking } from '../../../lib/api';
 import { formatCurrency, formatDate } from '../../../lib/utils';
 
 export default function AdminDashboardPage() {
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'all' | 'arrivals' | 'departures'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'arrivals' | 'in_house' | 'departures'>('all');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const { data: overview, isLoading, refetch, isFetching } = useQuery({
@@ -37,6 +40,8 @@ export default function AdminDashboardPage() {
           ? 'Guest checked in successfully. Room marked as Occupied.'
           : variables.status === 'checked_out'
           ? 'Guest checked out. Room released to Available.'
+          : variables.status === 'confirmed'
+          ? 'Reservation confirmed.'
           : 'Reservation status updated.';
       setNotification({ type: 'success', message: actionText });
       queryClient.invalidateQueries({ queryKey: ['admin-overview'] });
@@ -54,11 +59,17 @@ export default function AdminDashboardPage() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   const filteredActions = todaysActions.filter((b) => {
+    if (activeTab === 'pending') {
+      return b.status === 'pending';
+    }
     if (activeTab === 'arrivals') {
       return b.status === 'confirmed' || b.status === 'pending';
     }
-    if (activeTab === 'departures') {
+    if (activeTab === 'in_house') {
       return b.status === 'checked_in';
+    }
+    if (activeTab === 'departures') {
+      return b.status === 'checked_in' || b.status === 'checked_out';
     }
     return true;
   });
@@ -153,11 +164,11 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* KPI 3: Check-Ins Today */}
+        {/* KPI 3: Check-Ins & Pending Requests */}
         <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-              Check-Ins Expected Today
+              Today's Arrivals & Requests
             </span>
             <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
               <LogIn className="w-5 h-5" />
@@ -167,11 +178,13 @@ export default function AdminDashboardPage() {
             <span className="font-serif text-3xl font-bold text-white">
               {isLoading ? '...' : kpis?.checkInsToday || 0}
             </span>
-            <span className="text-xs text-gray-400">Arrivals</span>
+            <span className="text-xs text-gray-400">Today's Arrivals</span>
           </div>
-          <div className="text-xs text-blue-400/80 font-light mt-3 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
-            <span>Standard arrival window: 3 PM+</span>
+          <div className="text-xs text-amber-400 font-medium mt-3 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <span>
+              {kpis?.pendingBookings ?? todaysActions.filter(b => b.status === 'pending').length} New Pending Requests
+            </span>
           </div>
         </div>
 
@@ -179,7 +192,7 @@ export default function AdminDashboardPage() {
         <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-              Check-Outs Expected Today
+              Check-Outs & Active Stays
             </span>
             <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
               <LogOut className="w-5 h-5" />
@@ -189,56 +202,87 @@ export default function AdminDashboardPage() {
             <span className="font-serif text-3xl font-bold text-white">
               {isLoading ? '...' : kpis?.checkOutsToday || 0}
             </span>
-            <span className="text-xs text-gray-400">Departures</span>
+            <span className="text-xs text-gray-400">Today's Departures</span>
           </div>
           <div className="text-xs text-purple-400/80 font-light mt-3 flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            <span>Housekeeping turnaround active</span>
+            <span>
+              {kpis?.activeBookings ?? todaysActions.length} Total Bookings in System
+            </span>
           </div>
         </div>
       </div>
 
-      {/* Immediate Action Center: Today's Arrivals & Departures */}
+      {/* Immediate Action Center: Live Reservations & Front Desk Queue */}
       <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
           <div>
             <h2 className="font-serif text-2xl font-bold text-white flex items-center gap-2">
-              <span>Arrivals & Departures</span>
+              <span>Live Reservations & Front Desk Queue</span>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-hotel-gold/10 text-hotel-gold border border-hotel-gold/30 font-sans">
-                {filteredActions.length} Pending Actions
+                {filteredActions.length} Reservations
               </span>
             </h2>
             <p className="text-gray-400 text-xs sm:text-sm font-light mt-1">
-              Trigger instant check-in, check-out, or cancellation with automatic physical room synchronization.
+              Trigger instant check-in, review new booking requests, manage departures, and maintain room occupancy.
             </p>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex items-center gap-1.5 bg-white/5 p-1 rounded-2xl border border-white/10 text-xs font-semibold">
-            <button
-              onClick={() => setActiveTab('all')}
-              className={`px-3 py-1.5 rounded-xl transition-colors ${
-                activeTab === 'all' ? 'bg-hotel-gold text-hotel-dark' : 'text-gray-400 hover:text-white'
-              }`}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/10 text-xs font-semibold">
+              <button
+                onClick={() => setActiveTab('all')}
+                className={`px-3 py-1.5 rounded-xl transition-colors ${
+                  activeTab === 'all' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                All ({todaysActions.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('pending')}
+                className={`px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 ${
+                  activeTab === 'pending' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <span>Pending</span>
+                {todaysActions.filter((b) => b.status === 'pending').length > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('arrivals')}
+                className={`px-3 py-1.5 rounded-xl transition-colors ${
+                  activeTab === 'arrivals' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Arrivals
+              </button>
+              <button
+                onClick={() => setActiveTab('in_house')}
+                className={`px-3 py-1.5 rounded-xl transition-colors ${
+                  activeTab === 'in_house' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                In-House
+              </button>
+              <button
+                onClick={() => setActiveTab('departures')}
+                className={`px-3 py-1.5 rounded-xl transition-colors ${
+                  activeTab === 'departures' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Departures
+              </button>
+            </div>
+
+            <Link
+              href="/admin/bookings"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-hotel-gold hover:bg-hotel-gold/10 hover:border-hotel-gold/30 transition-all"
             >
-              All Actions
-            </button>
-            <button
-              onClick={() => setActiveTab('arrivals')}
-              className={`px-3 py-1.5 rounded-xl transition-colors ${
-                activeTab === 'arrivals' ? 'bg-hotel-gold text-hotel-dark' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Arrivals
-            </button>
-            <button
-              onClick={() => setActiveTab('departures')}
-              className={`px-3 py-1.5 rounded-xl transition-colors ${
-                activeTab === 'departures' ? 'bg-hotel-gold text-hotel-dark' : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              Departures
-            </button>
+              <span>Full Registry</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
 
@@ -251,34 +295,46 @@ export default function AdminDashboardPage() {
                 <th className="py-3.5 px-4 font-semibold">Assigned Suite</th>
                 <th className="py-3.5 px-4 font-semibold">Stay Dates</th>
                 <th className="py-3.5 px-4 font-semibold">Total Amount</th>
-                <th className="py-3.5 px-4 font-semibold">Current Status</th>
-                <th className="py-3.5 px-4 font-semibold text-right">Quick Action</th>
+                <th className="py-3.5 px-4 font-semibold">Status</th>
+                <th className="py-3.5 px-4 font-semibold text-right">Front Desk Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
               {isLoading ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-gray-500">
-                    Loading front desk schedules...
+                    Loading live front desk schedules...
                   </td>
                 </tr>
               ) : filteredActions.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="text-center py-12 text-gray-500">
-                    No pending arrivals or departures scheduled for today.
+                    No reservations found matching the current filter.
                   </td>
                 </tr>
               ) : (
                 filteredActions.map((booking: AdminActionBooking) => {
                   const isCheckedIn = booking.status === 'checked_in';
-                  const isConfirmed = booking.status === 'confirmed' || booking.status === 'pending';
+                  const isConfirmed = booking.status === 'confirmed';
+                  const isPending = booking.status === 'pending';
                   const isCancelled = booking.status === 'cancelled';
+                  const isCheckedOut = booking.status === 'checked_out';
+
+                  const checkInFormatted = formatDate(booking.check_in_date);
+                  const isTodayArrival = booking.check_in_date?.startsWith(todayStr);
 
                   return (
                     <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
                       {/* Guest Column */}
                       <td className="py-4 px-4">
-                        <div className="font-semibold text-white">{booking.guest_name}</div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-white">{booking.guest_name}</span>
+                          {isPending && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] uppercase font-bold tracking-wider">
+                              New Request
+                            </span>
+                          )}
+                        </div>
                         <div className="text-xs text-gray-400">{booking.guest_email}</div>
                         <div className="font-mono text-[10px] text-hotel-gold mt-0.5">
                           {booking.booking_reference}
@@ -299,9 +355,14 @@ export default function AdminDashboardPage() {
                       {/* Dates Column */}
                       <td className="py-4 px-4 text-xs">
                         <div className="text-gray-200">
-                          {formatDate(booking.check_in_date)} — {formatDate(booking.check_out_date)}
+                          {checkInFormatted} — {formatDate(booking.check_out_date)}
                         </div>
-                        <div className="text-gray-500">{booking.total_nights} Nights</div>
+                        <div className="text-gray-500 flex items-center gap-1 mt-0.5">
+                          <span>{booking.total_nights} Nights</span>
+                          {isTodayArrival && (
+                            <span className="text-emerald-400 font-semibold">• Arriving Today</span>
+                          )}
+                        </div>
                       </td>
 
                       {/* Total Amount */}
@@ -318,7 +379,9 @@ export default function AdminDashboardPage() {
                               : booking.status === 'confirmed'
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
                               : booking.status === 'pending'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse'
+                              : booking.status === 'checked_out'
+                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
                               : 'bg-gray-500/10 text-gray-400 border border-gray-500/30'
                           }`}
                         >
@@ -329,7 +392,30 @@ export default function AdminDashboardPage() {
 
                       {/* Actions Buttons */}
                       <td className="py-4 px-4 text-right">
-                        <div className="inline-flex items-center gap-2">
+                        <div className="inline-flex items-center gap-1.5">
+                          {isPending && (
+                            <>
+                              <button
+                                onClick={() => statusMutation.mutate({ bookingId: booking.id, status: 'confirmed' })}
+                                disabled={statusMutation.isPending}
+                                className="px-2.5 py-1.5 rounded-xl bg-hotel-gold text-hotel-dark font-bold text-xs uppercase tracking-wider hover:bg-hotel-gold/90 disabled:opacity-50 transition-all flex items-center gap-1"
+                                title="Confirm this reservation"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                <span>Confirm</span>
+                              </button>
+                              <button
+                                onClick={() => statusMutation.mutate({ bookingId: booking.id, status: 'checked_in' })}
+                                disabled={statusMutation.isPending}
+                                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] disabled:opacity-50 transition-all flex items-center gap-1"
+                                title="Check In guest now"
+                              >
+                                <LogIn className="w-3.5 h-3.5" />
+                                <span>Check In</span>
+                              </button>
+                            </>
+                          )}
+
                           {isConfirmed && (
                             <button
                               onClick={() => statusMutation.mutate({ bookingId: booking.id, status: 'checked_in' })}
@@ -352,7 +438,7 @@ export default function AdminDashboardPage() {
                             </button>
                           )}
 
-                          {!isCancelled && booking.status !== 'checked_out' && (
+                          {!isCancelled && !isCheckedOut && (
                             <button
                               onClick={() => {
                                 if (confirm(`Cancel reservation for ${booking.guest_name}? This will release the room.`)) {

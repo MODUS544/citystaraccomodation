@@ -179,6 +179,8 @@ export interface AdminKPIs {
   occupancyRate: number;
   checkInsToday: number;
   checkOutsToday: number;
+  pendingBookings?: number;
+  activeBookings?: number;
   monthToDateRevenue: number;
   yearToDateRevenue: number;
 }
