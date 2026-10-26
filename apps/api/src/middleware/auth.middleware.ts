@@ -118,19 +118,28 @@ export async function optionalAuthenticate(
   next();
 }
 
+export type AppRole = 'guest' | 'receptionist' | 'admin' | 'staff';
+
 /**
  * Role-Based Access Control (RBAC) middleware factory
+ * Supports 'staff' as an alias matching either 'receptionist' or 'admin'
  */
-export function requireRole(allowedRoles: UserRole[]) {
+export function requireRole(allowedRoles: AppRole[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
     if (!req.user) {
       return next(new UnauthorizedError('User authentication required before role evaluation'));
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const userRole = req.user.role;
+    const isStaff = userRole === 'admin' || userRole === 'receptionist';
+    const hasPermission =
+      allowedRoles.includes(userRole) ||
+      (allowedRoles.includes('staff') && isStaff);
+
+    if (!hasPermission) {
       return next(
         new ForbiddenError(
-          `Access denied. Role "${req.user.role}" does not have required permissions [${allowedRoles.join(', ')}]`
+          `Access denied. Role "${userRole}" does not have required permissions [${allowedRoles.join(', ')}]`
         )
       );
     }

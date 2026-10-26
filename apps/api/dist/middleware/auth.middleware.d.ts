@@ -21,7 +21,9 @@ export declare function authenticateToken(req: Request, _res: Response, next: Ne
  * Optional authentication: attaches req.user if a valid token exists, but does not block unauthenticated traffic
  */
 export declare function optionalAuthenticate(req: Request, _res: Response, next: NextFunction): Promise<void>;
+export type AppRole = 'guest' | 'receptionist' | 'admin' | 'staff';
 /**
  * Role-Based Access Control (RBAC) middleware factory
+ * Supports 'staff' as an alias matching either 'receptionist' or 'admin'
  */
-export declare function requireRole(allowedRoles: UserRole[]): (req: Request, _res: Response, next: NextFunction) => void;
+export declare function requireRole(allowedRoles: AppRole[]): (req: Request, _res: Response, next: NextFunction) => void;
