@@ -1,0 +1,24 @@
+{
+  "name": "citystar-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "City Star Hotel - Enterprise Monorepo (Next.js, Node.js REST API, Supabase)",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=@citystar/api",
+    "build:api": "npm run build --workspace=@citystar/api",
+    "start:api": "npm start --workspace=@citystar/api",
+    "lint:api": "npm run lint --workspace=@citystar/api"
+  },
+  "keywords": [
+    "hotel-management",
+    "supabase",
+    "express",
+    "nextjs",
+    "render"
+  ],
+  "author": "City Star Hotel Engineering Team",
+  "license": "ISC"
+}

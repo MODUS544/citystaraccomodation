@@ -1,0 +1,151 @@
+// =============================================================================
+// PRISMA SCHEMA - CITY STAR HOTEL API
+// Database Provider: PostgreSQL (Supabase with Transaction Pooler & Direct URL)
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  guest
+  receptionist
+  admin
+
+  @@map("user_role")
+}
+
+enum RoomStatus {
+  available
+  occupied
+  maintenance
+  cleaning
+  out_of_order
+
+  @@map("room_status")
+}
+
+enum BookingStatus {
+  pending
+  confirmed
+  checked_in
+  checked_out
+  cancelled
+  no_show
+
+  @@map("booking_status")
+}
+
+enum PaymentStatus {
+  pending
+  completed
+  failed
+  refunded
+
+  @@map("payment_status")
+}
+
+enum PaymentMethod {
+  credit_card
+  debit_card
+  bank_transfer
+  cash
+  stripe
+  paystack
+
+  @@map("payment_method")
+}
+
+model Profile {
+  id          String   @id @db.Uuid
+  email       String   @unique
+  fullName    String   @map("full_name")
+  phoneNumber String?  @map("phone_number")
+  role        UserRole @default(guest)
+  avatarUrl   String?  @map("avatar_url")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  bookings Booking[]
+
+  @@map("profiles")
+}
+
+model RoomType {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name              String   @unique
+  slug              String   @unique
+  description       String?
+  basePricePerNight Decimal  @map("base_price_per_night") @db.Decimal(10, 2)
+  maxOccupancy      Int      @map("max_occupancy")
+  amenities         Json     @default("[]")
+  images            Json     @default("[]")
+  isActive          Boolean  @default(true) @map("is_active")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  rooms Room[]
+
+  @@map("room_types")
+}
+
+model Room {
+  id         String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  roomNumber String     @unique @map("room_number")
+  roomTypeId String     @map("room_type_id") @db.Uuid
+  floor      Int
+  status     RoomStatus @default(available)
+  notes      String?
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  roomType RoomType  @relation(fields: [roomTypeId], references: [id], onDelete: Restrict)
+  bookings Booking[]
+
+  @@map("rooms")
+}
+
+model Booking {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  bookingReference String        @unique @map("booking_reference")
+  guestId          String        @map("guest_id") @db.Uuid
+  roomId           String        @map("room_id") @db.Uuid
+  checkInDate      DateTime      @map("check_in_date") @db.Date
+  checkOutDate     DateTime      @map("check_out_date") @db.Date
+  totalNights      Int?          @map("total_nights")
+  totalAmount      Decimal       @map("total_amount") @db.Decimal(10, 2)
+  status           BookingStatus @default(pending)
+  specialRequests  String?       @map("special_requests")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  guest    Profile   @relation(fields: [guestId], references: [id], onDelete: Restrict)
+  room     Room      @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@map("bookings")
+}
+
+model Payment {
+  id               String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  paymentReference String        @unique @map("payment_reference")
+  bookingId        String        @map("booking_id") @db.Uuid
+  amount           Decimal       @db.Decimal(10, 2)
+  currency         String        @default("USD") @db.VarChar(3)
+  status           PaymentStatus @default(pending)
+  paymentMethod    PaymentMethod @map("payment_method")
+  transactionId    String?       @map("transaction_id")
+  gatewayResponse  Json?         @default("{}") @map("gateway_response")
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  @@map("payments")
+}

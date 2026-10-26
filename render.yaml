@@ -1,0 +1,44 @@
+# =============================================================================
+# RENDER BLUEPRINT - CITY STAR HOTEL ARCHITECTURE
+# Host Target: https://citystaraccomodation.onrender.com
+# =============================================================================
+
+version: "1"
+services:
+  - type: web
+    name: citystar-api
+    runtime: node
+    plan: starter
+    region: frankfurt
+    rootDir: apps/api
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: API_PREFIX
+        value: /api/v1
+      - key: SUPABASE_URL
+        value: https://eyxorfozdtpysnsdwkib.supabase.co
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: CORS_ORIGIN
+        value: https://citystaraccomodation.onrender.com,http://localhost:3000
+      - key: DB_POOL_MAX
+        value: 10
+      - key: DB_POOL_IDLE_TIMEOUT_MS
+        value: 30000
+      - key: DB_POOL_CONNECTION_TIMEOUT_MS
+        value: 5000
