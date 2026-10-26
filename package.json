@@ -9,6 +9,10 @@
   "scripts": {
     "build": "npm run build --workspace=@citystar/api",
     "start": "node apps/api/dist/index.js",
+    "dev": "npm run dev --workspace=@citystar/web",
+    "dev:web": "npm run dev --workspace=@citystar/web",
+    "build:web": "npm run build --workspace=@citystar/web",
+    "start:web": "npm start --workspace=@citystar/web",
     "dev:api": "npm run dev --workspace=@citystar/api",
     "build:api": "npm run build --workspace=@citystar/api",
     "start:api": "npm start --workspace=@citystar/api",

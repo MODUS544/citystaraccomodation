@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Star, Menu, X, Calendar, User, Phone } from 'lucide-react';
+import { Star, Menu, X, Calendar, User, Phone, ShieldCheck } from 'lucide-react';
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -41,7 +41,7 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide">
+        <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-medium tracking-wide">
           <Link
             href="/#rooms"
             className="text-gray-300 hover:text-hotel-gold transition-colors"
@@ -66,6 +66,13 @@ export function Navbar() {
           >
             <Calendar className="w-4 h-4 text-hotel-gold" />
             My Bookings
+          </Link>
+          <Link
+            href="/admin"
+            className="text-hotel-gold hover:text-white transition-colors flex items-center gap-1.5 px-3 py-1 rounded-full border border-hotel-gold/40 hover:border-hotel-gold bg-hotel-gold/10 hover:bg-hotel-gold/20 text-xs font-semibold uppercase tracking-wider"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-hotel-gold" />
+            Staff Portal
           </Link>
         </nav>
 
@@ -124,6 +131,14 @@ export function Navbar() {
           >
             <Calendar className="w-4 h-4 text-hotel-gold" />
             My Bookings
+          </Link>
+          <Link
+            href="/admin"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-2 text-hotel-gold hover:text-white font-medium text-base py-1"
+          >
+            <ShieldCheck className="w-4 h-4 text-hotel-gold" />
+            Staff & Admin Portal
           </Link>
           <div className="pt-4 border-t border-white/10">
             <Link
