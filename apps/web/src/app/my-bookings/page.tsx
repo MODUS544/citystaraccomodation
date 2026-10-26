@@ -82,9 +82,21 @@ export default function MyBookingsPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+                <div
+                  className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border ${
+                    booking.status === 'confirmed'
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : booking.status === 'checked_in'
+                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+                      : booking.status === 'pending'
+                      ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                      : booking.status === 'checked_out'
+                      ? 'bg-purple-500/10 border-purple-500/30 text-purple-400'
+                      : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                  }`}
+                >
                   <CheckCircle className="w-4 h-4" />
-                  <span>{booking.status}</span>
+                  <span>{booking.status.replace('_', ' ')}</span>
                 </div>
               </div>
 
