@@ -238,7 +238,20 @@ export async function fetchAdminOverview(token?: string): Promise<AdminOverviewR
     const res = await fetch(`${API_BASE_URL}/admin/analytics/overview`, { headers, cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch overview');
     const json: ApiResponse<AdminOverviewResponse> = await res.json();
-    if (json.success && json.data) return json.data;
+    if (json.success && json.data) {
+      if (!json.data.todaysActions || json.data.todaysActions.length === 0) {
+        try {
+          const bookingsRes = await fetch(`${API_BASE_URL}/admin/bookings?limit=30`, { headers, cache: 'no-store' });
+          if (bookingsRes.ok) {
+            const bookingsJson = await bookingsRes.json();
+            if (bookingsJson.success && bookingsJson.data?.bookings?.length > 0) {
+              json.data.todaysActions = bookingsJson.data.bookings;
+            }
+          }
+        } catch {}
+      }
+      return json.data;
+    }
   } catch (err) {
     console.warn('Admin overview fetch fallback:', err);
   }
