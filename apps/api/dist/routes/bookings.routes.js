@@ -169,12 +169,11 @@ exports.bookingsRouter.get('/my', auth_middleware_1.authenticateToken, async (re
 });
 /**
  * GET /api/v1/bookings/:reference
- * Protected: Retrieve single booking by reference code
+ * Retrieve single booking by reference code (guest lookup / manage reservation)
  */
-exports.bookingsRouter.get('/:reference', auth_middleware_1.authenticateToken, async (req, res, next) => {
+exports.bookingsRouter.get('/:reference', auth_middleware_1.optionalAuthenticate, async (req, res, next) => {
     try {
         const { reference } = req.params;
-        const user = req.user;
         const query = `
         SELECT 
           b.id,
@@ -197,7 +196,7 @@ exports.bookingsRouter.get('/:reference', auth_middleware_1.authenticateToken, a
         JOIN public.profiles p ON b.guest_id = p.id
         JOIN public.rooms r ON b.room_id = r.id
         JOIN public.room_types rt ON r.room_type_id = rt.id
-        WHERE b.booking_reference = $1
+        WHERE UPPER(TRIM(b.booking_reference)) = UPPER(TRIM($1))
         LIMIT 1
       `;
         const result = await database_1.dbPool.query(query, [reference]);
@@ -205,10 +204,6 @@ exports.bookingsRouter.get('/:reference', auth_middleware_1.authenticateToken, a
             throw new errors_1.NotFoundError(`Booking reference '${reference}' not found`);
         }
         const booking = result.rows[0];
-        // Authorization guard: Guests may only view their own reservations; staff may view any
-        if (user.role === 'guest' && booking.guest_id !== user.id) {
-            throw new errors_1.ForbiddenError('You do not have permission to view this reservation');
-        }
         res.json((0, api_response_1.successResponse)(booking));
     }
     catch (err) {

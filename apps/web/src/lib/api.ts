@@ -159,15 +159,55 @@ export async function fetchBookingByReference(
   reference: string,
   token?: string
 ): Promise<Booking | null> {
-  const headers: Record<string, string> = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  const headers: Record<string, string> = { 'Accept': 'application/json' };
+  
+  let activeToken = token;
+  if (!activeToken && typeof window !== 'undefined') {
+    activeToken = localStorage.getItem('citystar_auth_token') || undefined;
+  }
+  if (activeToken) {
+    headers['Authorization'] = `Bearer ${activeToken}`;
   }
 
-  const res = await fetch(`${API_BASE_URL}/bookings/${reference}`, { headers });
-  if (!res.ok) return null;
-  const json: ApiResponse<Booking> = await res.json();
-  return json.success && json.data ? json.data : null;
+  const cleanRef = reference.trim().toUpperCase();
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/bookings/${encodeURIComponent(cleanRef)}`, {
+      headers,
+      cache: 'no-store',
+    });
+
+    if (res.ok) {
+      const json: ApiResponse<Booking> = await res.json();
+      if (json.success && json.data) {
+        return json.data;
+      }
+    }
+
+    // Fallback: If not found via guest endpoint and user has admin/staff session, query admin search
+    if (activeToken) {
+      try {
+        const adminRes = await fetch(`${API_BASE_URL}/admin/bookings?search=${encodeURIComponent(cleanRef)}`, {
+          headers,
+          cache: 'no-store',
+        });
+        if (adminRes.ok) {
+          const adminJson = await adminRes.json();
+          if (adminJson.success && adminJson.data?.bookings?.length > 0) {
+            const match = adminJson.data.bookings.find(
+              (b: any) => b.booking_reference?.trim().toUpperCase() === cleanRef
+            ) || adminJson.data.bookings[0];
+            return match;
+          }
+        }
+      } catch {}
+    }
+
+    return null;
+  } catch (err) {
+    console.error('fetchBookingByReference error:', err);
+    return null;
+  }
 }
 
 export interface AdminKPIs {

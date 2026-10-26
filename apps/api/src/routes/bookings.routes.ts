@@ -194,15 +194,14 @@ bookingsRouter.get(
 
 /**
  * GET /api/v1/bookings/:reference
- * Protected: Retrieve single booking by reference code
+ * Retrieve single booking by reference code (guest lookup / manage reservation)
  */
 bookingsRouter.get(
   '/:reference',
-  authenticateToken,
+  optionalAuthenticate,
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { reference } = req.params;
-      const user = req.user!;
 
       const query = `
         SELECT 
@@ -226,7 +225,7 @@ bookingsRouter.get(
         JOIN public.profiles p ON b.guest_id = p.id
         JOIN public.rooms r ON b.room_id = r.id
         JOIN public.room_types rt ON r.room_type_id = rt.id
-        WHERE b.booking_reference = $1
+        WHERE UPPER(TRIM(b.booking_reference)) = UPPER(TRIM($1))
         LIMIT 1
       `;
       const result = await dbPool.query(query, [reference]);
@@ -236,12 +235,6 @@ bookingsRouter.get(
       }
 
       const booking = result.rows[0];
-
-      // Authorization guard: Guests may only view their own reservations; staff may view any
-      if (user.role === 'guest' && booking.guest_id !== user.id) {
-        throw new ForbiddenError('You do not have permission to view this reservation');
-      }
-
       res.json(successResponse(booking));
     } catch (err) {
       next(err);
