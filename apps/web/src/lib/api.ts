@@ -121,6 +121,7 @@ export async function submitBooking(payload: {
   specialRequests?: string;
   guestName?: string;
   guestEmail?: string;
+  guestPhone?: string;
   token?: string;
 }): Promise<Booking> {
   const headers: Record<string, string> = {
@@ -135,9 +136,13 @@ export async function submitBooking(payload: {
     headers,
     body: JSON.stringify({
       roomId: payload.roomId,
+      roomTypeId: payload.roomId,
       checkInDate: payload.checkInDate,
       checkOutDate: payload.checkOutDate,
       specialRequests: payload.specialRequests,
+      guestName: payload.guestName,
+      guestEmail: payload.guestEmail,
+      guestPhone: payload.guestPhone,
     }),
   });
 

@@ -61,7 +61,7 @@ export function BookingModal({
         throw new Error('Check-out date must be strictly after check-in date');
       }
 
-      // If backend booking requires room id, use room type or mock room UUID
+      // Submit real booking to API
       const bookingData = await submitBooking({
         roomId: room.id,
         checkInDate: checkIn,
@@ -69,6 +69,7 @@ export function BookingModal({
         specialRequests,
         guestName: fullName,
         guestEmail: email,
+        guestPhone: phone,
       });
 
       setConfirmedBooking({
@@ -77,17 +78,10 @@ export function BookingModal({
         nights,
       });
     } catch (err: any) {
-      // If backend throws double-booking conflict
       if (err.message && err.message.includes('DOUBLE_BOOKING_CONFLICT')) {
         setErrorMsg('This suite is already reserved for the selected dates. Please adjust your dates.');
       } else {
-        // Fallback for demonstration when backend is in sandbox mode
-        const mockRef = `CSH-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-        setConfirmedBooking({
-          reference: mockRef,
-          totalAmount: grandTotal,
-          nights,
-        });
+        setErrorMsg(err.message || 'Failed to complete reservation. Please try again.');
       }
     } finally {
       setIsLoading(false);
