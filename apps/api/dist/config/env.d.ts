@@ -4,7 +4,7 @@ declare const envSchema: z.ZodObject<{
     NODE_ENV: z.ZodEffects<z.ZodDefault<z.ZodEnum<["development", "test", "production"]>>, "development" | "test" | "production", unknown>;
     API_PREFIX: z.ZodEffects<z.ZodDefault<z.ZodString>, string, unknown>;
     CORS_ORIGIN: z.ZodDefault<z.ZodString>;
-    SUPABASE_URL: z.ZodDefault<z.ZodString>;
+    SUPABASE_URL: z.ZodEffects<z.ZodDefault<z.ZodString>, string, unknown>;
     SUPABASE_ANON_KEY: z.ZodDefault<z.ZodString>;
     SUPABASE_SERVICE_ROLE_KEY: z.ZodOptional<z.ZodString>;
     SUPABASE_JWT_SECRET: z.ZodOptional<z.ZodString>;
@@ -32,7 +32,7 @@ declare const envSchema: z.ZodObject<{
     NODE_ENV?: unknown;
     API_PREFIX?: unknown;
     CORS_ORIGIN?: string | undefined;
-    SUPABASE_URL?: string | undefined;
+    SUPABASE_URL?: unknown;
     SUPABASE_ANON_KEY?: string | undefined;
     SUPABASE_SERVICE_ROLE_KEY?: string | undefined;
     SUPABASE_JWT_SECRET?: string | undefined;

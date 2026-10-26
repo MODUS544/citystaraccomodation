@@ -18,7 +18,21 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('*'),
 
   // Supabase Configuration
-  SUPABASE_URL: z.string().default('https://eyxorfozdtpysnsdwkib.supabase.co'),
+  SUPABASE_URL: z.preprocess(
+    (val) => {
+      const fallback = 'https://eyxorfozdtpysnsdwkib.supabase.co';
+      if (!val || typeof val !== 'string' || !val.trim()) return fallback;
+      let cleaned = val.trim().replace(/^['"]|['"]$/g, '');
+      if (cleaned.startsWith('postgresql://') || cleaned.startsWith('postgres://') || cleaned.includes('host=')) {
+        return fallback;
+      }
+      if (!cleaned.match(/^https?:\/\//i)) {
+        return `https://${cleaned}`;
+      }
+      return cleaned;
+    },
+    z.string().default('https://eyxorfozdtpysnsdwkib.supabase.co')
+  ),
   SUPABASE_ANON_KEY: z.string().default('dummy_anon_key_for_development'),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
   SUPABASE_JWT_SECRET: z.string().optional(),

@@ -20,8 +20,23 @@ exports.dbPool = new pg_1.Pool(poolConfig);
 exports.dbPool.on('error', (err) => {
     console.error('CRITICAL: Unexpected error on idle PostgreSQL pool client:', err);
 });
+function cleanSupabaseUrl(val) {
+    const fallback = 'https://eyxorfozdtpysnsdwkib.supabase.co';
+    if (!val || typeof val !== 'string' || !val.trim())
+        return fallback;
+    let cleaned = val.trim().replace(/^['"]|['"]$/g, '');
+    if (cleaned.startsWith('postgresql://') || cleaned.startsWith('postgres://') || cleaned.includes('host=')) {
+        return fallback;
+    }
+    if (!cleaned.match(/^https?:\/\//i)) {
+        return `https://${cleaned}`;
+    }
+    return cleaned;
+}
+const safeSupabaseUrl = cleanSupabaseUrl(env_1.env.SUPABASE_URL);
+const safeAnonKey = (env_1.env.SUPABASE_SERVICE_ROLE_KEY || env_1.env.SUPABASE_ANON_KEY || 'dummy_anon_key').trim().replace(/^['"]|['"]$/g, '');
 // Supabase JavaScript Client (Stateless Auth & Storage SDK)
-exports.supabase = (0, supabase_js_1.createClient)(env_1.env.SUPABASE_URL, env_1.env.SUPABASE_SERVICE_ROLE_KEY || env_1.env.SUPABASE_ANON_KEY, {
+exports.supabase = (0, supabase_js_1.createClient)(safeSupabaseUrl, safeAnonKey, {
     auth: {
         autoRefreshToken: false,
         persistSession: false,
