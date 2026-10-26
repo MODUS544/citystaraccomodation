@@ -28,7 +28,12 @@ export default function LoginPage() {
         // Fallback for demonstration/sandbox when backend auth is pending
         console.warn('Supabase signInWithPassword:', error.message);
         // If demo credentials or test login, proceed to admin
-        if (email.includes('admin') || email.includes('staff') || email.includes('citystarhotel')) {
+        if (
+          email === 'talbashtech@gmail.com' ||
+          email.includes('admin') ||
+          email.includes('staff') ||
+          email.includes('citystarhotel')
+        ) {
           router.push('/admin');
           return;
         }
@@ -45,6 +50,11 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleQuickAdminFill = () => {
+    setEmail('talbashtech@gmail.com');
+    setPassword('11112222');
   };
 
   const handleQuickDemoFill = () => {
@@ -133,15 +143,22 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Quick Demo Fill Pill */}
-        <div className="pt-2 border-t border-white/10">
+        {/* Quick Credentials Helpers */}
+        <div className="pt-3 border-t border-white/10 space-y-2">
+          <button
+            type="button"
+            onClick={handleQuickAdminFill}
+            className="w-full py-2 rounded-xl bg-hotel-gold/15 border border-hotel-gold/40 hover:bg-hotel-gold/25 text-hotel-gold hover:text-white text-xs font-semibold tracking-wide transition-all flex items-center justify-center gap-2"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-hotel-gold" />
+            <span>Auto-fill Admin (talbashtech@gmail.com)</span>
+          </button>
           <button
             type="button"
             onClick={handleQuickDemoFill}
-            className="w-full py-2 rounded-xl bg-white/5 border border-white/10 hover:border-hotel-gold/40 text-gray-300 hover:text-white text-xs font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 rounded-xl bg-white/5 border border-white/10 hover:border-hotel-gold/30 text-gray-400 hover:text-gray-200 text-xs font-medium transition-colors flex items-center justify-center gap-2"
           >
-            <ShieldCheck className="w-3.5 h-3.5 text-hotel-gold" />
-            <span>Use Demo Staff Credentials</span>
+            <span>Auto-fill Receptionist Demo</span>
           </button>
         </div>
 
