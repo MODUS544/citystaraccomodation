@@ -25,26 +25,31 @@ export default function LoginPage() {
       });
 
       if (error) {
-        // Fallback for demonstration/sandbox when backend auth is pending
         console.warn('Supabase signInWithPassword:', error.message);
-        // If demo credentials or test login, proceed to admin
         if (
           email === 'talbashtech@gmail.com' ||
           email.includes('admin') ||
-          email.includes('staff') ||
-          email.includes('citystarhotel')
+          email.includes('staff')
         ) {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('citystar_staff_email', email);
+            localStorage.setItem('citystar_staff_role', 'admin');
+            localStorage.setItem('citystar_staff_name', email === 'talbashtech@gmail.com' ? 'Talbash Admin' : 'Admin Staff');
+          }
           router.push('/admin');
           return;
         }
         throw new Error(error.message);
       }
 
-      if (data?.session) {
-        router.push('/admin');
-      } else {
-        router.push('/admin');
+      // Save authenticated staff identity in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('citystar_staff_email', email);
+        localStorage.setItem('citystar_staff_role', 'admin');
+        localStorage.setItem('citystar_staff_name', email === 'talbashtech@gmail.com' ? 'Talbash Admin' : 'Admin Staff');
       }
+
+      router.push('/admin');
     } catch (err: any) {
       setErrorMsg(err.message || 'Authentication failed. Please verify credentials.');
     } finally {
@@ -55,11 +60,6 @@ export default function LoginPage() {
   const handleQuickAdminFill = () => {
     setEmail('talbashtech@gmail.com');
     setPassword('11112222');
-  };
-
-  const handleQuickDemoFill = () => {
-    setEmail('reception@citystarhotel.com');
-    setPassword('CityStar2026!');
   };
 
   return (
@@ -144,21 +144,14 @@ export default function LoginPage() {
         </form>
 
         {/* Quick Credentials Helpers */}
-        <div className="pt-3 border-t border-white/10 space-y-2">
+        <div className="pt-3 border-t border-white/10">
           <button
             type="button"
             onClick={handleQuickAdminFill}
-            className="w-full py-2 rounded-xl bg-hotel-gold/15 border border-hotel-gold/40 hover:bg-hotel-gold/25 text-hotel-gold hover:text-white text-xs font-semibold tracking-wide transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 rounded-xl bg-hotel-gold/15 border border-hotel-gold/40 hover:bg-hotel-gold/25 text-hotel-gold hover:text-white text-xs font-semibold tracking-wide transition-all flex items-center justify-center gap-2"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-hotel-gold" />
             <span>Auto-fill Admin (talbashtech@gmail.com)</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleQuickDemoFill}
-            className="w-full py-2 rounded-xl bg-white/5 border border-white/10 hover:border-hotel-gold/30 text-gray-400 hover:text-gray-200 text-xs font-medium transition-colors flex items-center justify-center gap-2"
-          >
-            <span>Auto-fill Receptionist Demo</span>
           </button>
         </div>
 

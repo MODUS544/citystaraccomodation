@@ -29,14 +29,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [staffEmail, setStaffEmail] = useState<string>('reception@citystarhotel.com');
+  const [staffEmail, setStaffEmail] = useState<string>('talbashtech@gmail.com');
+  const [staffRole, setStaffRole] = useState<string>('admin');
 
   useEffect(() => {
     async function checkAuth() {
       try {
+        if (typeof window !== 'undefined') {
+          const storedEmail = localStorage.getItem('citystar_staff_email');
+          const storedRole = localStorage.getItem('citystar_staff_role');
+          if (storedEmail) setStaffEmail(storedEmail);
+          if (storedRole) setStaffRole(storedRole);
+        }
+
         const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user) {
-          setStaffEmail(session.user.email || 'staff@citystarhotel.com');
+        if (session && session.user && session.user.email) {
+          setStaffEmail(session.user.email);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('citystar_staff_email', session.user.email);
+          }
         }
       } catch (err) {
         console.warn('Session verification notice:', err);
@@ -49,6 +60,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleSignOut = async () => {
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('citystar_staff_email');
+        localStorage.removeItem('citystar_staff_role');
+        localStorage.removeItem('citystar_staff_name');
+      }
       await supabase.auth.signOut();
     } catch {}
     router.push('/login');
@@ -147,9 +163,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               </div>
               <div className="truncate">
                 <div className="text-[10px] uppercase tracking-wider text-hotel-gold font-bold">
-                  Staff Console
+                  {staffRole === 'admin' ? 'Super Admin' : 'Staff Console'}
                 </div>
-                <div className="text-xs text-gray-300 truncate max-w-[110px]">
+                <div className="text-xs text-gray-200 truncate max-w-[130px]" title={staffEmail}>
                   {staffEmail}
                 </div>
               </div>
