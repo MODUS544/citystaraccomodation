@@ -5,7 +5,6 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "prestart": "npm run build",
     "build": "tsc",
     "start": "node dist/index.js",
     "lint": "tsc --noEmit",
