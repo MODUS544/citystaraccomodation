@@ -29,30 +29,58 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  const [staffEmail, setStaffEmail] = useState<string>('talbashtech@gmail.com');
-  const [staffRole, setStaffRole] = useState<string>('admin');
+  const [staffEmail, setStaffEmail] = useState<string>('');
+  const [staffRole, setStaffRole] = useState<string>('');
 
   useEffect(() => {
     async function checkAuth() {
       try {
+        let hasStaffAuth = false;
+        let activeEmail = '';
+        let activeRole = '';
+
         if (typeof window !== 'undefined') {
+          const storedToken = localStorage.getItem('citystar_auth_token');
           const storedEmail = localStorage.getItem('citystar_staff_email');
           const storedRole = localStorage.getItem('citystar_staff_role');
-          if (storedEmail) setStaffEmail(storedEmail);
-          if (storedRole) setStaffRole(storedRole);
-        }
 
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.user && session.user.email) {
-          setStaffEmail(session.user.email);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('citystar_staff_email', session.user.email);
+          if (storedToken && storedEmail && (storedRole === 'admin' || storedRole === 'staff')) {
+            hasStaffAuth = true;
+            activeEmail = storedEmail;
+            activeRole = storedRole;
           }
         }
+
+        // Also check Supabase session
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session && session.user && session.user.email) {
+            const email = session.user.email;
+            if (email === 'talbashtech@gmail.com' || activeRole === 'admin') {
+              hasStaffAuth = true;
+              activeEmail = email;
+              activeRole = activeRole || 'admin';
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('citystar_staff_email', email);
+                localStorage.setItem('citystar_staff_role', 'admin');
+              }
+            }
+          }
+        } catch (supabaseErr) {
+          console.warn('Supabase session check:', supabaseErr);
+        }
+
+        if (!hasStaffAuth) {
+          router.replace('/login');
+          return;
+        }
+
+        setStaffEmail(activeEmail);
+        setStaffRole(activeRole);
+        setIsLoadingAuth(false);
       } catch (err) {
         console.warn('Session verification notice:', err);
-      } finally {
-        setIsLoadingAuth(false);
+        router.replace('/login');
       }
     }
     checkAuth();
@@ -64,10 +92,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         localStorage.removeItem('citystar_staff_email');
         localStorage.removeItem('citystar_staff_role');
         localStorage.removeItem('citystar_staff_name');
+        localStorage.removeItem('citystar_auth_token');
       }
       await supabase.auth.signOut();
     } catch {}
-    router.push('/login');
+    router.replace('/login');
   };
 
   if (isLoadingAuth) {

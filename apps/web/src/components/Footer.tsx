@@ -59,7 +59,7 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/admin" className="text-hotel-gold hover:text-white transition-colors font-medium flex items-center gap-1">
+                <Link href="/login" className="text-hotel-gold hover:text-white transition-colors font-medium flex items-center gap-1">
                   <span>Staff & Admin Portal</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-hotel-gold/20 text-hotel-gold uppercase tracking-wider font-semibold">Staff</span>
                 </Link>

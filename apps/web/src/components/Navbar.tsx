@@ -68,7 +68,7 @@ export function Navbar() {
             My Bookings
           </Link>
           <Link
-            href="/admin"
+            href="/login"
             className="text-hotel-gold hover:text-white transition-colors flex items-center gap-1.5 px-3 py-1 rounded-full border border-hotel-gold/40 hover:border-hotel-gold bg-hotel-gold/10 hover:bg-hotel-gold/20 text-xs font-semibold uppercase tracking-wider"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-hotel-gold" />
@@ -133,7 +133,7 @@ export function Navbar() {
             My Bookings
           </Link>
           <Link
-            href="/admin"
+            href="/login"
             onClick={() => setIsMobileMenuOpen(false)}
             className="flex items-center gap-2 text-hotel-gold hover:text-white font-medium text-base py-1"
           >

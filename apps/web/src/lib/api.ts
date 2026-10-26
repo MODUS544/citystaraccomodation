@@ -264,9 +264,9 @@ export interface AdminRoom {
 
 export function getAdminAuthToken(): string {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('citystar_auth_token') || 'cs_admin_talbashtech_verified_session';
+    return localStorage.getItem('citystar_auth_token') || '';
   }
-  return 'cs_admin_talbashtech_verified_session';
+  return '';
 }
 
 export async function fetchAdminOverview(token?: string): Promise<AdminOverviewResponse> {
