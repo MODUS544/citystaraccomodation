@@ -14,9 +14,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Filter,
+  Printer,
 } from 'lucide-react';
 import { fetchAdminBookings, updateBookingStatus, AdminActionBooking } from '../../../../lib/api';
 import { formatCurrency, formatDate } from '../../../../lib/utils';
+import { PaymentReceipt } from '../../../../components/PaymentReceipt';
 
 export default function BookingsManagementPage() {
   const queryClient = useQueryClient();
@@ -26,6 +28,7 @@ export default function BookingsManagementPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [selectedReceiptBooking, setSelectedReceiptBooking] = useState<AdminActionBooking | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin-bookings', page, status, search, startDate, endDate],
@@ -251,6 +254,15 @@ export default function BookingsManagementPage() {
 
                       <td className="py-4 px-4 text-right">
                         <div className="inline-flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceiptBooking(b)}
+                            title="View / Print Official Receipt"
+                            className="p-1.5 rounded-xl border border-white/10 hover:border-hotel-gold text-gray-400 hover:text-hotel-gold transition-colors"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                          </button>
+
                           {b.status === 'confirmed' && (
                             <button
                               onClick={() => statusMutation.mutate({ bookingId: b.id, status: 'checked_in' })}
@@ -323,6 +335,34 @@ export default function BookingsManagementPage() {
           </div>
         )}
       </div>
+
+      {/* Official Payment Receipt Modal */}
+      {selectedReceiptBooking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="my-8 max-w-md w-full">
+            <PaymentReceipt
+              receipt={{
+                receiptNo: selectedReceiptBooking.booking_reference,
+                date: selectedReceiptBooking.check_in_date,
+                guestName: selectedReceiptBooking.guest_name || 'Verified Resident',
+                roomNo: selectedReceiptBooking.room_number || '204',
+                roomName: selectedReceiptBooking.room_type_name || 'Deluxe Room',
+                nights: selectedReceiptBooking.total_nights || 1,
+                roomRate: Math.round(Number(selectedReceiptBooking.total_amount) / (selectedReceiptBooking.total_nights || 1)),
+                accommodationTotal: Number(selectedReceiptBooking.total_amount),
+                restaurantCharges: 0,
+                totalAmount: Number(selectedReceiptBooking.total_amount),
+                amountPaid: Number(selectedReceiptBooking.total_amount),
+                balanceDue: 0,
+                paymentMethod: 'Bank transfer',
+                paymentStatus: selectedReceiptBooking.status === 'cancelled' ? 'PENDING' : 'PAID',
+              }}
+              onClose={() => setSelectedReceiptBooking(null)}
+              showActions={true}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

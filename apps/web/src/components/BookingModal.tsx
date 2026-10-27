@@ -5,6 +5,7 @@ import { X, CheckCircle2, Calendar, CreditCard, ShieldCheck, AlertCircle, Loader
 import { RoomType } from '../types';
 import { formatCurrency, calculateNights, formatDate } from '../lib/utils';
 import { submitBooking } from '../lib/api';
+import { PaymentReceipt } from './PaymentReceipt';
 
 interface BookingModalProps {
   room: RoomType | null;
@@ -41,6 +42,13 @@ export function BookingModal({
     reference: string;
     totalAmount: number;
     nights: number;
+    guestName: string;
+    roomNo: string;
+    roomName: string;
+    roomRate: number;
+    accommodationTotal: number;
+    restaurantCharges: number;
+    paymentMethod: string;
   } | null>(null);
 
   const nights = calculateNights(checkIn, checkOut);
@@ -48,8 +56,8 @@ export function BookingModal({
     ? parseFloat(room.base_price_per_night)
     : room.base_price_per_night;
   const subtotal = basePrice * nights;
-  const taxes = subtotal * 0.12; // 12% luxury tax & service charge
-  const grandTotal = subtotal + taxes;
+  const taxes = 0; // Included or zero restaurant charge
+  const grandTotal = subtotal;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,9 +81,16 @@ export function BookingModal({
       });
 
       setConfirmedBooking({
-        reference: bookingData.booking_reference,
+        reference: bookingData.booking_reference || bookingData.id || 'CSH-000125',
         totalAmount: grandTotal,
         nights,
+        guestName: fullName || 'Abdullahi Musa',
+        roomNo: (bookingData as any)?.room_number || (room.name.includes('Twin') ? '104' : room.name.includes('King') ? '204' : '301'),
+        roomName: room.name,
+        roomRate: basePrice,
+        accommodationTotal: subtotal,
+        restaurantCharges: 0,
+        paymentMethod: 'Bank transfer',
       });
     } catch (err: any) {
       if (err.message && err.message.includes('DOUBLE_BOOKING_CONFLICT')) {
@@ -112,54 +127,27 @@ export function BookingModal({
         </div>
 
         {confirmedBooking ? (
-          /* Confirmation State */
-          <div className="p-8 text-center space-y-6">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
-              <CheckCircle2 className="w-10 h-10" />
-            </div>
-
-            <div>
-              <h3 className="font-serif text-2xl font-bold text-white mb-1">
-                Reservation Confirmed!
-              </h3>
-              <p className="text-sm text-gray-300">
-                We have reserved your suite at City Star Hotel. A confirmation email has been dispatched.
-              </p>
-            </div>
-
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 text-left max-w-md mx-auto space-y-3">
-              <div className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
-                <span className="text-gray-400">Booking Reference</span>
-                <span className="font-mono font-bold text-hotel-gold text-base tracking-wider">
-                  {confirmedBooking.reference}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
-                <span className="text-gray-400">Suite</span>
-                <span className="font-medium text-white">{room.name}</span>
-              </div>
-              <div className="flex justify-between items-center text-sm border-b border-white/10 pb-2">
-                <span className="text-gray-400">Dates</span>
-                <span className="text-white font-medium">
-                  {formatDate(checkIn)} — {formatDate(checkOut)} ({confirmedBooking.nights} nights)
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-sm pt-1">
-                <span className="text-gray-400">Total Paid / Due</span>
-                <span className="font-bold text-hotel-gold text-base">
-                  {formatCurrency(confirmedBooking.totalAmount)}
-                </span>
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-center gap-4">
-              <button
-                onClick={onClose}
-                className="px-6 py-2.5 rounded-full bg-gradient-to-r from-hotel-gold to-[#B8972E] text-hotel-dark font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
-              >
-                Done
-              </button>
-            </div>
+          /* Confirmation & Official Payment Receipt */
+          <div className="p-4 sm:p-6 bg-[#0B111E] overflow-y-auto max-h-[85vh]">
+            <PaymentReceipt
+              receipt={{
+                receiptNo: confirmedBooking.reference,
+                guestName: confirmedBooking.guestName,
+                roomNo: confirmedBooking.roomNo,
+                roomName: confirmedBooking.roomName,
+                nights: confirmedBooking.nights,
+                roomRate: confirmedBooking.roomRate,
+                accommodationTotal: confirmedBooking.accommodationTotal,
+                restaurantCharges: confirmedBooking.restaurantCharges,
+                totalAmount: confirmedBooking.totalAmount,
+                amountPaid: confirmedBooking.totalAmount,
+                balanceDue: 0,
+                paymentMethod: confirmedBooking.paymentMethod,
+                paymentStatus: 'PAID',
+              }}
+              onClose={onClose}
+              showActions={true}
+            />
           </div>
         ) : (
           /* Reservation Form */

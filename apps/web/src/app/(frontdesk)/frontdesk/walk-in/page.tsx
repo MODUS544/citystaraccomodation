@@ -35,6 +35,7 @@ import {
   WalkInGuest,
   WalkInBookingPayload,
 } from '../../../../types';
+import { PaymentReceipt } from '../../../../components/PaymentReceipt';
 
 export default function WalkInPage() {
   const queryClient = useQueryClient();
@@ -768,90 +769,29 @@ export default function WalkInPage() {
         </div>
       </form>
 
-      {/* Confirmation & Printable Receipt Modal */}
+      {/* Confirmation & Official Payment Receipt Modal */}
       {bookingSuccessData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#0A101D] border border-hotel-gold/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full space-y-6 shadow-2xl relative text-left">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center flex-shrink-0">
-                <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div>
-                <span className="text-[10px] uppercase tracking-widest text-emerald-400 font-bold block">
-                  Registration Successful
-                </span>
-                <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
-                  Room Key Card Issued
-                </h3>
-              </div>
-            </div>
-
-            {/* Folio Details Card (Printable Area) */}
-            <div id="printable-folio" className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3 text-xs">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <div>
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Reservation Ref</span>
-                  <span className="font-mono text-sm font-bold text-hotel-gold">
-                    {bookingSuccessData.bookingReference}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-gray-400 uppercase tracking-wider block">Assigned Room</span>
-                  <span className="font-bold text-base text-white">
-                    Room {bookingSuccessData.roomNumber || 'Assigned'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-gray-300">
-                <div>
-                  <span className="text-[10px] text-gray-500 block uppercase">Guest Name</span>
-                  <span className="font-semibold text-white">{fullName}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-500 block uppercase">Phone Number</span>
-                  <span>{phoneNumber}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-500 block uppercase">ID Document</span>
-                  <span>{idDocumentType.toUpperCase()}: {idNumber}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-500 block uppercase">Check-In / Out</span>
-                  <span>{checkInDate} → {checkOutDate}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-500 block uppercase">Tender & Status</span>
-                  <span className="uppercase text-emerald-400 font-medium">
-                    {paymentMethod.replace('_', ' ')} • Paid
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-gray-500 block uppercase">Total Settled</span>
-                  <span className="font-bold text-hotel-gold">${totalPrice}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs text-white font-medium flex items-center justify-center gap-2 transition-colors"
-              >
-                <Printer className="w-4 h-4 text-hotel-gold" />
-                <span>Print Folio / Key Slip</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={resetForm}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-hotel-gold hover:bg-hotel-gold-hover text-hotel-dark font-bold text-xs uppercase tracking-wider transition-colors"
-              >
-                Process Next Guest
-              </button>
-            </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="my-8 max-w-md w-full">
+            <PaymentReceipt
+              receipt={{
+                receiptNo: bookingSuccessData.bookingReference || 'CSH-000125',
+                guestName: fullName || 'Abdullahi Musa',
+                roomNo: bookingSuccessData.roomNumber || '204',
+                roomName: selectedRoomType?.name || 'Deluxe Room',
+                nights: totalNights,
+                roomRate: roomRate,
+                accommodationTotal: totalPrice,
+                restaurantCharges: 0,
+                totalAmount: totalPrice,
+                amountPaid: totalPrice,
+                balanceDue: 0,
+                paymentMethod: paymentMethod,
+                paymentStatus: 'PAID',
+              }}
+              onClose={resetForm}
+              showActions={true}
+            />
           </div>
         </div>
       )}

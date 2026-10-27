@@ -46,3 +46,33 @@ body {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* Pristine Print Styles for Official Payment Receipt */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-payment-receipt,
+  #printable-payment-receipt * {
+    visibility: visible;
+  }
+  #printable-payment-receipt {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    margin: 0;
+    padding: 24px;
+    background: #ffffff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 16px !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+

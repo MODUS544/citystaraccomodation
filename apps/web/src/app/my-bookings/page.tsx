@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Calendar, Bed, User, MapPin, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Search, Calendar, Bed, User, MapPin, CheckCircle, AlertCircle, Loader2, Receipt } from 'lucide-react';
 import { fetchBookingByReference } from '../../lib/api';
 import { Booking } from '../../types';
 import { formatCurrency, formatDate } from '../../lib/utils';
+import { PaymentReceipt } from '../../components/PaymentReceipt';
 
 export default function MyBookingsPage() {
   const [reference, setReference] = useState('');
   const [booking, setBooking] = useState<Booking | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
 
   const handleLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,13 +160,22 @@ export default function MyBookingsPage() {
                 </div>
               </div>
 
-              <div className="pt-6 border-t border-white/10 flex items-center justify-between">
+              <div className="pt-6 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-wider text-gray-400">Total Billed</div>
                   <div className="font-serif text-2xl font-bold text-hotel-gold">
                     {formatCurrency(booking.total_amount)}
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowReceipt(true)}
+                  className="px-5 py-2.5 rounded-xl bg-hotel-gold hover:bg-hotel-gold-hover text-hotel-dark font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-[0_0_20px_rgba(212,175,55,0.4)]"
+                >
+                  <Receipt className="w-4 h-4" />
+                  <span>View Official Receipt</span>
+                </button>
               </div>
             </div>
           ) : (
@@ -178,6 +189,34 @@ export default function MyBookingsPage() {
               </p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Official Payment Receipt Modal */}
+      {showReceipt && booking && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200 overflow-y-auto">
+          <div className="my-8 max-w-md w-full">
+            <PaymentReceipt
+              receipt={{
+                receiptNo: booking.booking_reference,
+                date: booking.check_in_date,
+                guestName: booking.guest_name || 'Verified Resident',
+                roomNo: booking.room_number || '204',
+                roomName: booking.room_type_name || 'Deluxe Room',
+                nights: booking.total_nights || 1,
+                roomRate: Math.round(Number(booking.total_amount) / (booking.total_nights || 1)),
+                accommodationTotal: Number(booking.total_amount),
+                restaurantCharges: 0,
+                totalAmount: Number(booking.total_amount),
+                amountPaid: Number(booking.total_amount),
+                balanceDue: 0,
+                paymentMethod: booking.payment_method || 'Bank transfer',
+                paymentStatus: booking.status === 'cancelled' ? 'PENDING' : 'PAID',
+              }}
+              onClose={() => setShowReceipt(false)}
+              showActions={true}
+            />
+          </div>
         </div>
       )}
     </div>

@@ -54,6 +54,7 @@ import {
   ContactInfoSetting,
   RoomType,
 } from '../../../../types';
+import { PaymentReceipt } from '../../../../components/PaymentReceipt';
 
 const GALLERY_CATEGORIES = [
   { id: 'suites', label: 'Suites & Penthouses' },
@@ -1604,6 +1605,42 @@ export default function BrandingCMSPage() {
               <Save className="w-4 h-4" />
               <span>Save Brand Identity</span>
             </button>
+          </div>
+
+          {/* Live Payment Receipt Preview */}
+          <div className="pt-8 border-t border-white/10">
+            <div className="mb-4">
+              <span className="text-[10px] uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
+                Official Receipt Preview
+              </span>
+              <h3 className="font-serif text-xl font-bold text-white">Live Payment Receipt Format</h3>
+              <p className="text-gray-400 text-xs font-light">
+                Matches the exact official receipt given to guests online, at front-desk walk-in checkout, and on key card issuance.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl bg-black/40 border border-white/10 flex justify-center">
+              <PaymentReceipt
+                receipt={{
+                  receiptNo: 'CSH-000125 (Sample)',
+                  date: '2026-10-27',
+                  guestName: 'Abdullahi Musa (Sample)',
+                  roomNo: '204',
+                  nights: 2,
+                  roomRate: 50000,
+                  accommodationTotal: 100000,
+                  restaurantCharges: 12000,
+                  totalAmount: 112000,
+                  amountPaid: 112000,
+                  balanceDue: 0,
+                  paymentMethod: 'Bank transfer (sample)',
+                  paymentStatus: 'PAID',
+                  logoUrl: logoState.url || undefined,
+                  watermarkNote: 'ILLUSTRATIVE SAMPLE — NOT A VALID PAYMENT RECEIPT',
+                }}
+                showActions={true}
+              />
+            </div>
           </div>
         </div>
       )}

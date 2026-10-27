@@ -41,6 +41,7 @@ export interface Booking {
   total_amount: number | string;
   status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
   payment_method?: 'cash' | 'pos_terminal' | 'transfer' | 'card_online';
+  payment_status?: 'pending' | 'paid' | 'refunded' | 'failed';
   special_requests?: string;
   created_at: string;
   room_number?: string;
