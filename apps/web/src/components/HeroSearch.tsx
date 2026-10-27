@@ -2,10 +2,20 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { Calendar, Users, BedDouble, Search, Sparkles } from 'lucide-react';
+import { fetchPublicSettings } from '../lib/api';
 
 export function HeroSearch() {
   const router = useRouter();
+
+  const { data: siteSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => fetchPublicSettings(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const hero = siteSettings?.hero_banner;
 
   // Initialize sensible default dates
   const today = new Date();
@@ -32,13 +42,17 @@ export function HeroSearch() {
     router.push(`/rooms?${params.toString()}`);
   };
 
+  const bgImage =
+    hero?.image_url ||
+    'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000&q=85';
+
   return (
     <section className="relative min-h-[92vh] flex items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Background Image with Dark & Gold Gradients */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 transition-transform duration-1000"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 transition-all duration-1000"
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000&q=85')`,
+          backgroundImage: `url('${bgImage}')`,
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-[#080C15] via-[#080C15]/70 to-[#080C15]/50" />
@@ -56,14 +70,21 @@ export function HeroSearch() {
 
         {/* Hero Title */}
         <h1 className="font-serif text-4xl sm:text-6xl md:text-7xl font-bold text-white tracking-tight leading-[1.1] mb-6">
-          Elegance Redefined, <br />
-          <span className="bg-gradient-to-r from-hotel-gold-light via-hotel-gold to-[#AA820A] bg-clip-text text-transparent">
-            Luxury Realized
-          </span>
+          {hero?.headline ? (
+            hero.headline
+          ) : (
+            <>
+              Elegance Redefined, <br />
+              <span className="bg-gradient-to-r from-hotel-gold-light via-hotel-gold to-[#AA820A] bg-clip-text text-transparent">
+                Luxury Realized
+              </span>
+            </>
+          )}
         </h1>
 
         <p className="max-w-2xl mx-auto text-gray-300 text-base sm:text-lg font-light leading-relaxed mb-10">
-          Immerse yourself in bespoke hospitality, panoramic skyline vistas, and world-class culinary masterpieces in the heart of the metropolis.
+          {hero?.subheadline ||
+            'Immerse yourself in bespoke hospitality, panoramic skyline vistas, and world-class culinary masterpieces in the heart of the metropolis.'}
         </p>
 
         {/* Interactive Booking Widget */}

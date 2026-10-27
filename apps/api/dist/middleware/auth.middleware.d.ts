@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-export type UserRole = 'guest' | 'receptionist' | 'admin';
+export type UserRole = 'guest' | 'receptionist' | 'staff' | 'admin' | 'super_admin';
 export interface AuthenticatedUser {
     id: string;
     email: string;
@@ -21,9 +21,19 @@ export declare function authenticateToken(req: Request, _res: Response, next: Ne
  * Optional authentication: attaches req.user if a valid token exists, but does not block unauthenticated traffic
  */
 export declare function optionalAuthenticate(req: Request, _res: Response, next: NextFunction): Promise<void>;
-export type AppRole = 'guest' | 'receptionist' | 'admin' | 'staff';
+export type AppRole = 'guest' | 'receptionist' | 'staff' | 'admin' | 'super_admin';
 /**
  * Role-Based Access Control (RBAC) middleware factory
- * Supports 'staff' as an alias matching either 'receptionist' or 'admin'
+ * Supports super_admin full clearance and staff/receptionist hierarchy
  */
 export declare function requireRole(allowedRoles: AppRole[]): (req: Request, _res: Response, next: NextFunction) => void;
+/**
+ * Super Administrator Exclusive Guard
+ * Restricts revenue metrics, financial settlement logs, rate modifications, staff management, and Global CMS
+ */
+export declare const requireSuperAdmin: (req: Request, _res: Response, next: NextFunction) => void;
+/**
+ * Front-Desk Staff & Administration Guard
+ * Permits front-desk staff, receptionists, admins, and super admins
+ */
+export declare const requireStaffOrAdmin: (req: Request, _res: Response, next: NextFunction) => void;

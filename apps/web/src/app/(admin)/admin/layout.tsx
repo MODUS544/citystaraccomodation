@@ -15,6 +15,8 @@ import {
   X,
   Shield,
   Loader2,
+  Palette,
+  DoorOpen,
 } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 
@@ -22,6 +24,7 @@ const NAVIGATION_ITEMS = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Reservations', href: '/admin/bookings', icon: CalendarCheck2 },
   { name: 'Room Inventory', href: '/admin/inventory', icon: BedDouble },
+  { name: 'Brand & Media CMS', href: '/admin/branding', icon: Palette },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -171,8 +174,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        {/* Guest Site Link */}
-        <div className="pt-6 border-t border-white/10 space-y-3">
+        {/* Operations & Guest Site Links */}
+        <div className="pt-6 border-t border-white/10 space-y-2">
+          <Link
+            href="/frontdesk/walk-in"
+            className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-hotel-gold bg-hotel-gold/10 hover:bg-hotel-gold/20 border border-hotel-gold/30 transition-all hover:scale-[1.01]"
+          >
+            <span className="flex items-center gap-2">
+              <DoorOpen className="w-4 h-4 text-hotel-gold" />
+              Front Desk Walk-In
+            </span>
+            <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-hotel-gold text-hotel-dark">
+              Terminal
+            </span>
+          </Link>
+
           <Link
             href="/"
             target="_blank"

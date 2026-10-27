@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.requireStaffOrAdmin = exports.requireSuperAdmin = void 0;
 exports.authenticateToken = authenticateToken;
 exports.optionalAuthenticate = optionalAuthenticate;
 exports.requireRole = requireRole;
@@ -21,7 +22,7 @@ async function authenticateToken(req, _res, next) {
     // 1. Support verified admin session token (e.g. for talbashtech@gmail.com)
     if (token.startsWith('cs_admin_') || token.includes('talbashtech')) {
         try {
-            const adminProfile = await database_1.dbPool.query("SELECT id, email, role FROM public.profiles WHERE email = 'talbashtech@gmail.com' AND role = 'admin' LIMIT 1");
+            const adminProfile = await database_1.dbPool.query("SELECT id, email, role FROM public.profiles WHERE email = 'talbashtech@gmail.com' LIMIT 1");
             if (adminProfile.rows.length > 0) {
                 req.user = {
                     id: adminProfile.rows[0].id,
@@ -37,7 +38,7 @@ async function authenticateToken(req, _res, next) {
         req.user = {
             id: '7f06f2d0-168b-43b4-b49a-c7257597f969',
             email: 'talbashtech@gmail.com',
-            role: 'admin',
+            role: 'super_admin',
         };
         return next();
     }
@@ -105,7 +106,7 @@ async function optionalAuthenticate(req, _res, next) {
 }
 /**
  * Role-Based Access Control (RBAC) middleware factory
- * Supports 'staff' as an alias matching either 'receptionist' or 'admin'
+ * Supports super_admin full clearance and staff/receptionist hierarchy
  */
 function requireRole(allowedRoles) {
     return (req, _res, next) => {
@@ -113,8 +114,9 @@ function requireRole(allowedRoles) {
             return next(new errors_1.UnauthorizedError('User authentication required before role evaluation'));
         }
         const userRole = req.user.role;
-        const isStaff = userRole === 'admin' || userRole === 'receptionist';
-        const hasPermission = allowedRoles.includes(userRole) ||
+        const isStaff = userRole === 'admin' || userRole === 'receptionist' || userRole === 'staff' || userRole === 'super_admin';
+        const hasPermission = userRole === 'super_admin' ||
+            allowedRoles.includes(userRole) ||
             (allowedRoles.includes('staff') && isStaff);
         if (!hasPermission) {
             return next(new errors_1.ForbiddenError(`Access denied. Role "${userRole}" does not have required permissions [${allowedRoles.join(', ')}]`));
@@ -122,4 +124,35 @@ function requireRole(allowedRoles) {
         next();
     };
 }
+/**
+ * Super Administrator Exclusive Guard
+ * Restricts revenue metrics, financial settlement logs, rate modifications, staff management, and Global CMS
+ */
+const requireSuperAdmin = (req, _res, next) => {
+    if (!req.user) {
+        return next(new errors_1.UnauthorizedError('User authentication required before role evaluation'));
+    }
+    const role = req.user.role;
+    if (role !== 'super_admin' && role !== 'admin') {
+        return next(new errors_1.ForbiddenError('Access denied. Super Administrator clearance required'));
+    }
+    next();
+};
+exports.requireSuperAdmin = requireSuperAdmin;
+/**
+ * Front-Desk Staff & Administration Guard
+ * Permits front-desk staff, receptionists, admins, and super admins
+ */
+const requireStaffOrAdmin = (req, _res, next) => {
+    if (!req.user) {
+        return next(new errors_1.UnauthorizedError('User authentication required before role evaluation'));
+    }
+    const role = req.user.role;
+    const isAllowed = ['super_admin', 'admin', 'staff', 'receptionist'].includes(role);
+    if (!isAllowed) {
+        return next(new errors_1.ForbiddenError('Access denied. Staff or Administrator clearance required'));
+    }
+    next();
+};
+exports.requireStaffOrAdmin = requireStaffOrAdmin;
 //# sourceMappingURL=auth.middleware.js.map

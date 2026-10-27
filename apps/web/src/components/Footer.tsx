@@ -2,9 +2,21 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
 import { Star, MapPin, Mail, Phone, ArrowUpRight } from 'lucide-react';
+import { fetchPublicSettings } from '../lib/api';
 
 export function Footer() {
+  const { data: siteSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => fetchPublicSettings(),
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const logo = siteSettings?.brand_logo;
+  const contact = siteSettings?.contact_info;
+
   return (
     <footer className="bg-[#05080E] border-t border-white/10 text-white pt-16 pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -12,15 +24,27 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-dark">
-                <Star className="w-5 h-5 text-hotel-gold fill-hotel-gold/20" />
-              </div>
+              {logo?.url ? (
+                <div className="relative w-10 h-10 rounded-full border border-hotel-gold/60 overflow-hidden bg-hotel-dark">
+                  <Image
+                    src={logo.url}
+                    alt={logo.alt_text || 'City Star Logo'}
+                    fill
+                    unoptimized
+                    className="object-cover p-0.5"
+                  />
+                </div>
+              ) : (
+                <div className="w-10 h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-dark">
+                  <Star className="w-5 h-5 text-hotel-gold fill-hotel-gold/20" />
+                </div>
+              )}
               <div>
                 <span className="font-serif text-2xl font-bold tracking-wider text-white block leading-none">
-                  CITY STAR
+                  {logo?.site_title || 'CITY STAR'}
                 </span>
                 <span className="text-[10px] tracking-[0.25em] text-hotel-gold uppercase font-medium">
-                  Hotel & Suites
+                  {logo?.tag_line || 'Hotel & Suites'}
                 </span>
               </div>
             </Link>
@@ -75,15 +99,15 @@ export function Footer() {
             <ul className="space-y-2.5 text-sm text-gray-400">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-hotel-gold flex-shrink-0 mt-0.5" />
-                <span>450 Grand Star Boulevard, Metropolitan Center</span>
+                <span>{contact?.address || '450 Grand Star Boulevard, Metropolitan Center'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-hotel-gold flex-shrink-0" />
-                <span>+1 (800) 248-9782</span>
+                <span>{contact?.phone || '+1 (800) 248-9782'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-hotel-gold flex-shrink-0" />
-                <span>concierge@citystarhotel.com</span>
+                <span>{contact?.email || 'concierge@citystarhotel.com'}</span>
               </li>
             </ul>
           </div>

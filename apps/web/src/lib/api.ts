@@ -1,4 +1,13 @@
-import { RoomType, AvailableRoom, Booking, ApiResponse } from '../types';
+import { 
+  RoomType, 
+  AvailableRoom, 
+  Booking, 
+  ApiResponse, 
+  SiteSettings, 
+  WalkInGuest, 
+  AvailableWalkInRoom, 
+  WalkInBookingPayload 
+} from '../types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://citystaraccomodation.onrender.com/api/v1';
 
@@ -525,3 +534,230 @@ export async function updateRoomStatus(
   }
   return json.data;
 }
+
+// ---------------------------------------------------------------------------
+// GLOBAL SITE CONTENT & MEDIA CMS API (Super Admin)
+// ---------------------------------------------------------------------------
+
+export async function fetchPublicSettings(): Promise<SiteSettings> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/settings/public`, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch public settings');
+    const json = await res.json();
+    return json.success && json.data ? json.data : {};
+  } catch (err) {
+    console.warn('Public settings fetch notice:', err);
+    return {};
+  }
+}
+
+export async function fetchAdminSettings(token?: string): Promise<SiteSettings> {
+  const activeToken = token || getAdminAuthToken();
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  const res = await fetch(`${API_BASE_URL}/admin/settings`, { headers, cache: 'no-store' });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to fetch admin settings');
+  return json.data;
+}
+
+export async function updateSiteSetting(key: string, value: any, token?: string): Promise<any> {
+  const activeToken = token || getAdminAuthToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  const res = await fetch(`${API_BASE_URL}/admin/settings/${key}`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ value }),
+  });
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || `Failed to update site setting ${key}`);
+  return json.data;
+}
+
+export async function getSignedUploadUrl(
+  fileName: string,
+  fileType?: string,
+  folder = 'branding',
+  token?: string
+): Promise<{ filePath: string; signedUrl?: string; token?: string; publicUrl: string; directUploadRequired?: boolean }> {
+  const activeToken = token || getAdminAuthToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  const res = await fetch(`${API_BASE_URL}/admin/uploads/signed-url`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ fileName, fileType, folder }),
+  });
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to generate signed upload URL');
+  return json.data;
+}
+
+export async function uploadDirectAsset(
+  fileOrName: File | string,
+  dataUriOrFolder?: string,
+  folder = 'branding',
+  token?: string
+): Promise<{ filePath: string; publicUrl: string }> {
+  let fileName: string;
+  let dataUri: string;
+  let targetFolder: string;
+  let activeToken: string | null;
+
+  if (typeof window !== 'undefined' && fileOrName instanceof File) {
+    fileName = fileOrName.name;
+    targetFolder = dataUriOrFolder || 'branding';
+    activeToken = token || getAdminAuthToken();
+    dataUri = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(fileOrName);
+    });
+  } else {
+    fileName = fileOrName as string;
+    dataUri = dataUriOrFolder as string;
+    targetFolder = folder;
+    activeToken = token || getAdminAuthToken();
+  }
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  const res = await fetch(`${API_BASE_URL}/admin/uploads/direct`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ fileName, dataUri, folder: targetFolder }),
+  });
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to upload asset directly');
+  return json.data;
+}
+
+export async function updateRoomType(
+  id: string,
+  payload: {
+    name?: string;
+    description?: string;
+    basePricePerNight?: number;
+    maxOccupancy?: number;
+    amenities?: string[];
+    images?: string[];
+  },
+  token?: string
+): Promise<any> {
+  const activeToken = token || getAdminAuthToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  const res = await fetch(`${API_BASE_URL}/admin/room-types/${id}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify(payload),
+  });
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to update room type');
+  return json.data;
+}
+
+// ---------------------------------------------------------------------------
+// FRONT-DESK WALK-IN GUEST ONBOARDING & ROOM ALLOCATION API
+// ---------------------------------------------------------------------------
+
+export async function fetchAvailableRoomsForWalkIn(
+  roomTypeId?: string,
+  checkInDate?: string,
+  checkOutDate?: string,
+  token?: string
+): Promise<AvailableWalkInRoom[]> {
+  const activeToken = token || getAdminAuthToken();
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  const queryParams = new URLSearchParams();
+  if (roomTypeId) queryParams.set('roomTypeId', roomTypeId);
+  if (checkInDate) queryParams.set('checkInDate', checkInDate);
+  if (checkOutDate) queryParams.set('checkOutDate', checkOutDate);
+  const qs = queryParams.toString() ? `?${queryParams.toString()}` : '';
+
+  const res = await fetch(`${API_BASE_URL}/frontdesk/rooms/available${qs}`, { headers, cache: 'no-store' });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to fetch available rooms');
+  return json.data || [];
+}
+
+export async function lookupWalkInGuest(query: string, token?: string): Promise<WalkInGuest | null> {
+  const activeToken = token || getAdminAuthToken();
+  const headers: Record<string, string> = { Accept: 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  const res = await fetch(`${API_BASE_URL}/frontdesk/walk-in/lookup?query=${encodeURIComponent(query)}`, {
+    headers,
+    cache: 'no-store',
+  });
+  const json = await res.json();
+  if (!json.success) return null;
+  const list = json.data;
+  if (Array.isArray(list) && list.length > 0) {
+    const raw = list[0];
+    return {
+      ...raw,
+      fullName: raw.full_name || raw.fullName,
+      phoneNumber: raw.phone_number || raw.phoneNumber,
+      dateOfBirth: raw.date_of_birth || raw.dateOfBirth,
+      idDocumentType: raw.id_document_type || raw.id_type || raw.idDocumentType,
+      idNumber: raw.id_number || raw.idNumber,
+      emergencyContactName: raw.emergency_contact_name || raw.emergencyContactName,
+      emergencyContactPhone: raw.emergency_contact_phone || raw.emergencyContactPhone,
+    };
+  }
+  return null;
+}
+
+export async function createWalkInBooking(payload: WalkInBookingPayload, token?: string): Promise<any> {
+  const activeToken = token || getAdminAuthToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (activeToken) headers['Authorization'] = `Bearer ${activeToken}`;
+
+  // Normalize nested or flat payload to match backend walkInBookingSchema
+  const body =
+    payload.guest && payload.booking
+      ? {
+          fullName: payload.guest.fullName,
+          phoneNumber: payload.guest.phoneNumber,
+          email: payload.guest.email || undefined,
+          dateOfBirth: payload.guest.dateOfBirth || undefined,
+          idType: payload.guest.idDocumentType,
+          idNumber: payload.guest.idNumber,
+          address: payload.guest.address,
+          emergencyContactName: payload.guest.emergencyContactName,
+          emergencyContactPhone: payload.guest.emergencyContactPhone,
+          roomId: payload.booking.roomId,
+          roomTypeId: payload.booking.roomTypeId,
+          checkInDate: payload.booking.checkInDate,
+          checkOutDate: payload.booking.checkOutDate,
+          paymentMethod: payload.booking.paymentMethod,
+          autoCheckIn: payload.booking.autoCheckIn ?? true,
+          specialRequests: payload.booking.specialRequests,
+        }
+      : payload;
+
+  const res = await fetch(`${API_BASE_URL}/frontdesk/walk-in`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to complete walk-in reservation');
+  return json.data;
+}
+

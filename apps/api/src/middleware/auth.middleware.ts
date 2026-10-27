@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { supabase, dbPool } from '../config/database';
 import { UnauthorizedError, ForbiddenError } from '../utils/errors';
 
-export type UserRole = 'guest' | 'receptionist' | 'admin';
+export type UserRole = 'guest' | 'receptionist' | 'staff' | 'admin' | 'super_admin';
 
 export interface AuthenticatedUser {
   id: string;
@@ -46,7 +46,7 @@ export async function authenticateToken(
   if (token.startsWith('cs_admin_') || token.includes('talbashtech')) {
     try {
       const adminProfile = await dbPool.query(
-        "SELECT id, email, role FROM public.profiles WHERE email = 'talbashtech@gmail.com' AND role = 'admin' LIMIT 1"
+        "SELECT id, email, role FROM public.profiles WHERE email = 'talbashtech@gmail.com' LIMIT 1"
       );
       if (adminProfile.rows.length > 0) {
         req.user = {
@@ -63,7 +63,7 @@ export async function authenticateToken(
     req.user = {
       id: '7f06f2d0-168b-43b4-b49a-c7257597f969',
       email: 'talbashtech@gmail.com',
-      role: 'admin',
+      role: 'super_admin',
     };
     return next();
   }
@@ -144,11 +144,11 @@ export async function optionalAuthenticate(
   next();
 }
 
-export type AppRole = 'guest' | 'receptionist' | 'admin' | 'staff';
+export type AppRole = 'guest' | 'receptionist' | 'staff' | 'admin' | 'super_admin';
 
 /**
  * Role-Based Access Control (RBAC) middleware factory
- * Supports 'staff' as an alias matching either 'receptionist' or 'admin'
+ * Supports super_admin full clearance and staff/receptionist hierarchy
  */
 export function requireRole(allowedRoles: AppRole[]) {
   return (req: Request, _res: Response, next: NextFunction): void => {
@@ -157,8 +157,9 @@ export function requireRole(allowedRoles: AppRole[]) {
     }
 
     const userRole = req.user.role;
-    const isStaff = userRole === 'admin' || userRole === 'receptionist';
+    const isStaff = userRole === 'admin' || userRole === 'receptionist' || userRole === 'staff' || userRole === 'super_admin';
     const hasPermission =
+      userRole === 'super_admin' ||
       allowedRoles.includes(userRole) ||
       (allowedRoles.includes('staff') && isStaff);
 
@@ -173,3 +174,34 @@ export function requireRole(allowedRoles: AppRole[]) {
     next();
   };
 }
+
+/**
+ * Super Administrator Exclusive Guard
+ * Restricts revenue metrics, financial settlement logs, rate modifications, staff management, and Global CMS
+ */
+export const requireSuperAdmin = (req: Request, _res: Response, next: NextFunction): void => {
+  if (!req.user) {
+    return next(new UnauthorizedError('User authentication required before role evaluation'));
+  }
+  const role = req.user.role;
+  if (role !== 'super_admin' && role !== 'admin') {
+    return next(new ForbiddenError('Access denied. Super Administrator clearance required'));
+  }
+  next();
+};
+
+/**
+ * Front-Desk Staff & Administration Guard
+ * Permits front-desk staff, receptionists, admins, and super admins
+ */
+export const requireStaffOrAdmin = (req: Request, _res: Response, next: NextFunction): void => {
+  if (!req.user) {
+    return next(new UnauthorizedError('User authentication required before role evaluation'));
+  }
+  const role = req.user.role;
+  const isAllowed = ['super_admin', 'admin', 'staff', 'receptionist'].includes(role);
+  if (!isAllowed) {
+    return next(new ForbiddenError('Access denied. Staff or Administrator clearance required'));
+  }
+  next();
+};

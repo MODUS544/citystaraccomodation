@@ -3,6 +3,8 @@ import { healthRouter } from './health.routes';
 import { roomsRouter } from './rooms.routes';
 import { bookingsRouter } from './bookings.routes';
 import { adminRouter } from './admin.routes';
+import { settingsRouter } from './settings.routes';
+import { frontdeskRouter } from './frontdesk.routes';
 
 export const apiRouter = Router();
 
@@ -11,3 +13,5 @@ apiRouter.use('/health', healthRouter);
 apiRouter.use('/rooms', roomsRouter);
 apiRouter.use('/bookings', bookingsRouter);
 apiRouter.use('/admin', adminRouter);
+apiRouter.use('/settings', settingsRouter);
+apiRouter.use('/frontdesk', frontdeskRouter);

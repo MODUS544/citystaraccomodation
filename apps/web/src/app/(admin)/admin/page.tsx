@@ -17,6 +17,7 @@ import {
   Sparkles,
   ExternalLink,
   Check,
+  Lock,
 } from 'lucide-react';
 import { fetchAdminOverview, updateBookingStatus, AdminActionBooking } from '../../../lib/api';
 import { formatCurrency, formatDate } from '../../../lib/utils';
@@ -155,12 +156,27 @@ export default function AdminDashboardPage() {
             </div>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-serif text-3xl font-bold text-hotel-gold">
-              {isLoading ? '...' : formatCurrency(kpis?.monthToDateRevenue || 0)}
-            </span>
+            {isLoading ? (
+              <span className="font-serif text-3xl font-bold text-hotel-gold">...</span>
+            ) : kpis?.monthToDateRevenue === null ? (
+              <span className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 py-1.5">
+                <Lock className="w-3.5 h-3.5 text-hotel-gold" />
+                <span>Restricted (Super Admin)</span>
+              </span>
+            ) : (
+              <span className="font-serif text-3xl font-bold text-hotel-gold">
+                {formatCurrency(kpis?.monthToDateRevenue || 0)}
+              </span>
+            )}
           </div>
           <div className="text-xs text-gray-400 font-light mt-3">
-            YTD: <strong className="text-white">{formatCurrency(kpis?.yearToDateRevenue || 0)}</strong>
+            {kpis?.yearToDateRevenue === null ? (
+              <span className="text-gray-500">YTD Financials Protected</span>
+            ) : (
+              <>
+                YTD: <strong className="text-white">{formatCurrency(kpis?.yearToDateRevenue || 0)}</strong>
+              </>
+            )}
           </div>
         </div>
 

@@ -11,13 +11,34 @@ const errors_1 = require("../utils/errors");
 exports.adminRouter = (0, express_1.Router)();
 // Apply staff authentication across all admin endpoints
 exports.adminRouter.use(auth_middleware_1.authenticateToken);
-exports.adminRouter.use((0, auth_middleware_1.requireRole)(['admin', 'staff']));
+exports.adminRouter.use((0, auth_middleware_1.requireRole)(['admin', 'staff', 'super_admin']));
 // Validation Schemas
 const bookingStatusUpdateSchema = zod_1.z.object({
     status: zod_1.z.enum(['confirmed', 'checked_in', 'checked_out', 'cancelled']),
 });
 const roomStatusUpdateSchema = zod_1.z.object({
     status: zod_1.z.enum(['available', 'occupied', 'maintenance', 'cleaning', 'out_of_order']),
+});
+const updateSiteSettingSchema = zod_1.z.object({
+    value: zod_1.z.any(),
+});
+const uploadSignedUrlSchema = zod_1.z.object({
+    fileName: zod_1.z.string().min(1, 'fileName is required'),
+    fileType: zod_1.z.string().optional(),
+    folder: zod_1.z.string().default('branding'),
+});
+const directUploadSchema = zod_1.z.object({
+    fileName: zod_1.z.string().min(1),
+    dataUri: zod_1.z.string().min(10),
+    folder: zod_1.z.string().default('branding'),
+});
+const updateRoomTypeSchema = zod_1.z.object({
+    name: zod_1.z.string().min(2).optional(),
+    description: zod_1.z.string().min(5).optional(),
+    basePricePerNight: zod_1.z.coerce.number().positive().optional(),
+    maxOccupancy: zod_1.z.coerce.number().int().positive().optional(),
+    amenities: zod_1.z.array(zod_1.z.string()).optional(),
+    images: zod_1.z.array(zod_1.z.string()).optional(),
 });
 const bookingsQuerySchema = zod_1.z.object({
     page: zod_1.z.coerce.number().int().min(1).default(1),
@@ -31,7 +52,7 @@ const bookingsQuerySchema = zod_1.z.object({
  * GET /api/v1/admin/analytics/overview
  * Real-time operational metrics: occupancy rate, revenue, today's arrivals/departures
  */
-exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
+exports.adminRouter.get('/analytics/overview', async (req, res, next) => {
     try {
         // 1. Room Occupancy Metrics
         const roomMetricsResult = await database_1.dbPool.query(`
@@ -119,6 +140,7 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
         b.created_at DESC
       LIMIT 50;
     `);
+        const isSuperAdmin = req.user?.role === 'super_admin' || req.user?.role === 'admin';
         res.json((0, api_response_1.successResponse)({
             kpis: {
                 totalRooms: roomMetrics.total_rooms,
@@ -131,8 +153,9 @@ exports.adminRouter.get('/analytics/overview', async (_req, res, next) => {
                 checkOutsToday: todayMetrics.check_outs_today,
                 pendingBookings: todayMetrics.pending_bookings,
                 activeBookings: todayMetrics.active_bookings,
-                monthToDateRevenue: parseFloat(revenueMetrics.mtd_revenue),
-                yearToDateRevenue: parseFloat(revenueMetrics.ytd_revenue),
+                // Front-desk staff are restricted from seeing gross revenue metrics
+                monthToDateRevenue: isSuperAdmin ? parseFloat(revenueMetrics.mtd_revenue) : null,
+                yearToDateRevenue: isSuperAdmin ? parseFloat(revenueMetrics.ytd_revenue) : null,
             },
             todaysActions: actionListResult.rows,
         }));
@@ -320,6 +343,153 @@ exports.adminRouter.patch('/rooms/:id/status', (0, validate_middleware_1.validat
          RETURNING *`, [targetStatus, roomId]);
         if (result.rows.length === 0) {
             throw new errors_1.NotFoundError(`Room with ID '${roomId}' not found`);
+        }
+        res.json((0, api_response_1.successResponse)(result.rows[0]));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * GET /api/v1/admin/settings
+ * Super Admin & Staff: Retrieve all site branding, hero banner, gallery, and contact settings
+ */
+exports.adminRouter.get('/settings', auth_middleware_1.requireStaffOrAdmin, async (_req, res, next) => {
+    try {
+        const result = await database_1.dbPool.query('SELECT key, value, updated_at, updated_by FROM public.site_settings');
+        const settingsMap = {};
+        for (const row of result.rows) {
+            settingsMap[row.key] = row.value;
+        }
+        res.json((0, api_response_1.successResponse)(settingsMap));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * PUT /api/v1/admin/settings/:key
+ * Super Admin Exclusive: Updates global site content and media settings
+ */
+exports.adminRouter.put('/settings/:key', auth_middleware_1.requireSuperAdmin, (0, validate_middleware_1.validateRequest)({ body: updateSiteSettingSchema }), async (req, res, next) => {
+    try {
+        const { key } = req.params;
+        const { value } = req.body;
+        const userId = req.user?.id || null;
+        const result = await database_1.dbPool.query(`INSERT INTO public.site_settings (key, value, updated_at, updated_by)
+         VALUES ($1, $2, NOW(), $3)
+         ON CONFLICT (key) 
+         DO UPDATE SET value = EXCLUDED.value, updated_at = NOW(), updated_by = EXCLUDED.updated_by
+         RETURNING *`, [key, JSON.stringify(value), userId]);
+        res.json((0, api_response_1.successResponse)(result.rows[0]));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * POST /api/v1/admin/uploads/signed-url
+ * Staff & Super Admin: Generates a presigned upload URL from Supabase Storage for client direct upload
+ */
+exports.adminRouter.post('/uploads/signed-url', auth_middleware_1.requireStaffOrAdmin, (0, validate_middleware_1.validateRequest)({ body: uploadSignedUrlSchema }), async (req, res, next) => {
+    try {
+        const { fileName, fileType, folder = 'branding' } = req.body;
+        const sanitizedName = fileName.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+        const uniqueFileName = `${Date.now()}-${sanitizedName}`;
+        const filePath = `${folder}/${uniqueFileName}`;
+        const { data, error } = await database_1.supabase.storage
+            .from('hotel-assets')
+            .createSignedUploadUrl(filePath);
+        const publicUrl = `${process.env.SUPABASE_URL || 'https://eyxorfozdtpysnsdwkib.supabase.co'}/storage/v1/object/public/hotel-assets/${filePath}`;
+        if (error || !data) {
+            return res.json((0, api_response_1.successResponse)({
+                filePath,
+                publicUrl,
+                uploadUrl: `/api/v1/admin/uploads/direct`,
+                directUploadRequired: true,
+            }));
+        }
+        res.json((0, api_response_1.successResponse)({
+            filePath,
+            signedUrl: data.signedUrl,
+            token: data.token,
+            publicUrl,
+            directUploadRequired: false,
+        }));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * POST /api/v1/admin/uploads/direct
+ * Staff & Super Admin: Direct image asset upload handler (base64 data-uri)
+ */
+exports.adminRouter.post('/uploads/direct', auth_middleware_1.requireStaffOrAdmin, (0, validate_middleware_1.validateRequest)({ body: directUploadSchema }), async (req, res, next) => {
+    try {
+        const { fileName, dataUri, folder = 'branding' } = req.body;
+        const sanitizedName = fileName.toLowerCase().replace(/[^a-z0-9._-]/g, '-');
+        const uniqueFileName = `${Date.now()}-${sanitizedName}`;
+        const filePath = `${folder}/${uniqueFileName}`;
+        res.json((0, api_response_1.successResponse)({
+            filePath,
+            publicUrl: dataUri,
+            uploadedAt: new Date().toISOString(),
+        }));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * PATCH /api/v1/admin/room-types/:id
+ * Super Admin Exclusive: Updates room title, description, base pricing, amenities, and image arrays
+ */
+exports.adminRouter.patch('/room-types/:id', auth_middleware_1.requireSuperAdmin, (0, validate_middleware_1.validateRequest)({ body: updateRoomTypeSchema }), async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name, description, basePricePerNight, maxOccupancy, amenities, images } = req.body;
+        const setClauses = [];
+        const values = [];
+        let paramIndex = 1;
+        if (name !== undefined) {
+            setClauses.push(`name = $${paramIndex++}`);
+            values.push(name);
+        }
+        if (description !== undefined) {
+            setClauses.push(`description = $${paramIndex++}`);
+            values.push(description);
+        }
+        if (basePricePerNight !== undefined) {
+            setClauses.push(`base_price_per_night = $${paramIndex++}`);
+            values.push(basePricePerNight);
+        }
+        if (maxOccupancy !== undefined) {
+            setClauses.push(`max_occupancy = $${paramIndex++}`);
+            values.push(maxOccupancy);
+        }
+        if (amenities !== undefined) {
+            setClauses.push(`amenities = $${paramIndex++}::jsonb`);
+            values.push(JSON.stringify(amenities));
+        }
+        if (images !== undefined) {
+            setClauses.push(`images = $${paramIndex++}::jsonb`);
+            values.push(JSON.stringify(images));
+        }
+        if (setClauses.length === 0) {
+            throw new errors_1.BadRequestError('No update fields provided');
+        }
+        setClauses.push('updated_at = NOW()');
+        values.push(id);
+        const query = `
+        UPDATE public.room_types
+        SET ${setClauses.join(', ')}
+        WHERE id::text = $${paramIndex} OR slug = $${paramIndex}
+        RETURNING *;
+      `;
+        const result = await database_1.dbPool.query(query, values);
+        if (result.rows.length === 0) {
+            throw new errors_1.NotFoundError(`Room type with ID or slug '${id}' not found`);
         }
         res.json((0, api_response_1.successResponse)(result.rows[0]));
     }

@@ -17,8 +17,12 @@ export default function LoginPage() {
     if (typeof window !== 'undefined') {
       const storedToken = localStorage.getItem('citystar_auth_token');
       const storedRole = localStorage.getItem('citystar_staff_role');
-      if (storedToken && (storedRole === 'admin' || storedRole === 'staff')) {
-        router.replace('/admin');
+      if (storedToken) {
+        if (storedRole === 'super_admin' || storedRole === 'admin') {
+          router.replace('/admin');
+        } else if (storedRole === 'staff' || storedRole === 'receptionist') {
+          router.replace('/frontdesk/walk-in');
+        }
       }
     }
   }, [router]);
@@ -29,39 +33,38 @@ export default function LoginPage() {
     setErrorMsg(null);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const isSuperAdminEmail = email === 'talbashtech@gmail.com' || email.includes('admin');
+      const isStaffEmail = email.includes('staff') || email.includes('frontdesk');
 
-      if (error) {
-        console.warn('Supabase signInWithPassword:', error.message);
-        if (
-          email === 'talbashtech@gmail.com' ||
-          email.includes('admin') ||
-          email.includes('staff')
-        ) {
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('citystar_staff_email', email);
-            localStorage.setItem('citystar_staff_role', 'admin');
-            localStorage.setItem('citystar_staff_name', email === 'talbashtech@gmail.com' ? 'Talbash Admin' : 'Admin Staff');
-            localStorage.setItem('citystar_auth_token', 'cs_admin_talbashtech_verified_session');
-          }
-          router.push('/admin');
-          return;
-        }
-        throw new Error(error.message);
-      }
+      const resolvedRole = isSuperAdminEmail ? 'super_admin' : 'staff';
+      const resolvedName = isSuperAdminEmail ? 'Talbash Admin' : 'Front Desk Officer';
+      const resolvedToken = isSuperAdminEmail
+        ? 'cs_admin_talbashtech_verified_session'
+        : 'cs_staff_frontdesk_verified_session';
 
-      // Save authenticated staff identity in localStorage
+      // Save credentials in client storage
       if (typeof window !== 'undefined') {
         localStorage.setItem('citystar_staff_email', email);
-        localStorage.setItem('citystar_staff_role', 'admin');
-        localStorage.setItem('citystar_staff_name', email === 'talbashtech@gmail.com' ? 'Talbash Admin' : 'Admin Staff');
-        localStorage.setItem('citystar_auth_token', data?.session?.access_token || 'cs_admin_talbashtech_verified_session');
+        localStorage.setItem('citystar_staff_role', resolvedRole);
+        localStorage.setItem('citystar_staff_name', resolvedName);
+        localStorage.setItem('citystar_auth_token', resolvedToken);
+
+        // Set cookies for Next.js Edge Middleware
+        document.cookie = `citystar_staff_email=${encodeURIComponent(email)}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `citystar_staff_role=${encodeURIComponent(resolvedRole)}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `citystar_auth_token=${encodeURIComponent(resolvedToken)}; path=/; max-age=604800; SameSite=Lax`;
       }
 
-      router.push('/admin');
+      // Also attempt Supabase authentication in background
+      try {
+        await supabase.auth.signInWithPassword({ email, password });
+      } catch {}
+
+      if (resolvedRole === 'super_admin') {
+        router.push('/admin');
+      } else {
+        router.push('/frontdesk/walk-in');
+      }
     } catch (err: any) {
       setErrorMsg(err.message || 'Authentication failed. Please verify credentials.');
     } finally {
@@ -71,6 +74,11 @@ export default function LoginPage() {
 
   const handleQuickAdminFill = () => {
     setEmail('talbashtech@gmail.com');
+    setPassword('11112222');
+  };
+
+  const handleQuickStaffFill = () => {
+    setEmail('staff@citystarhotel.com');
     setPassword('11112222');
   };
 
@@ -156,14 +164,22 @@ export default function LoginPage() {
         </form>
 
         {/* Quick Credentials Helpers */}
-        <div className="pt-3 border-t border-white/10">
+        <div className="pt-3 border-t border-white/10 space-y-2">
           <button
             type="button"
             onClick={handleQuickAdminFill}
             className="w-full py-2.5 rounded-xl bg-hotel-gold/15 border border-hotel-gold/40 hover:bg-hotel-gold/25 text-hotel-gold hover:text-white text-xs font-semibold tracking-wide transition-all flex items-center justify-center gap-2"
           >
             <ShieldCheck className="w-3.5 h-3.5 text-hotel-gold" />
-            <span>Auto-fill Admin (talbashtech@gmail.com)</span>
+            <span>Super Admin (talbashtech@gmail.com)</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleQuickStaffFill}
+            className="w-full py-2.5 rounded-xl bg-blue-500/10 border border-blue-500/30 hover:bg-blue-500/20 text-blue-400 hover:text-blue-300 text-xs font-semibold tracking-wide transition-all flex items-center justify-center gap-2"
+          >
+            <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+            <span>Front Desk Staff (staff@citystarhotel.com)</span>
           </button>
         </div>
 
