@@ -83,7 +83,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#080C15] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#080C15] flex flex-col items-center justify-center p-4 pt-28 pb-16 relative overflow-hidden">
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(212,175,55,0.08)_0%,transparent_70%)] pointer-events-none" />
 
