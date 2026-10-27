@@ -34,10 +34,12 @@ export default function RoomInventoryPage() {
     },
   });
 
-  const filteredRooms = rooms?.filter((room) => {
-    if (statusFilter === 'all') return true;
-    return room.status === statusFilter;
-  }) || [];
+  const filteredRooms = Array.isArray(rooms)
+    ? rooms.filter((room) => {
+        if (statusFilter === 'all') return true;
+        return room.status === statusFilter;
+      })
+    : [];
 
   return (
     <div className="space-y-8">

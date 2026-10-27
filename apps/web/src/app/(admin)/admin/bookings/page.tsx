@@ -58,7 +58,7 @@ export default function BookingsManagementPage() {
     },
   });
 
-  const bookings = data?.bookings || [];
+  const bookings = Array.isArray(data?.bookings) ? data.bookings : [];
   const pagination = data?.pagination || { total: 0, page: 1, limit: 10, totalPages: 1 };
 
   return (

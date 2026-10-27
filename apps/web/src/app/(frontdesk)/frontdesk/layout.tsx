@@ -169,7 +169,7 @@ export default function FrontDeskLayout({ children }: { children: React.ReactNod
             </div>
             <div className="flex items-center gap-1 text-[11px] text-hotel-gold font-mono">
               <Clock className="w-3 h-3" />
-              <span>{currentTime}</span>
+              <span suppressHydrationWarning>{currentTime || '--:--:--'}</span>
             </div>
           </div>
         </div>
@@ -189,18 +189,20 @@ export default function FrontDeskLayout({ children }: { children: React.ReactNod
             <span>Walk-In Registration</span>
           </Link>
 
-          <Link
-            href="/admin/bookings"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold tracking-wide transition-all ${
-              pathname === '/admin/bookings'
-                ? 'bg-gradient-to-r from-hotel-gold/20 to-transparent text-hotel-gold border border-hotel-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <CalendarCheck2 className="w-4 h-4 text-hotel-gold" />
-            <span>Reservations & Check-In</span>
-          </Link>
+          {isSuperAdmin && (
+            <Link
+              href="/admin/bookings"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl text-xs font-semibold tracking-wide transition-all ${
+                pathname === '/admin/bookings'
+                  ? 'bg-gradient-to-r from-hotel-gold/20 to-transparent text-hotel-gold border border-hotel-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.1)]'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <CalendarCheck2 className="w-4 h-4 text-hotel-gold" />
+              <span>Reservations & Check-In</span>
+            </Link>
+          )}
 
           {/* Super Admin Switcher */}
           {isSuperAdmin && (

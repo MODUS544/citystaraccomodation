@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
   });
 
   const kpis = overview?.kpis;
-  const todaysActions = overview?.todaysActions || [];
+  const todaysActions = Array.isArray(overview?.todaysActions) ? overview.todaysActions : [];
 
   const todayStr = new Date().toISOString().split('T')[0];
 

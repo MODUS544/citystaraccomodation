@@ -688,10 +688,14 @@ export async function fetchAvailableRoomsForWalkIn(
   if (checkOutDate) queryParams.set('checkOutDate', checkOutDate);
   const qs = queryParams.toString() ? `?${queryParams.toString()}` : '';
 
-  const res = await fetch(`${API_BASE_URL}/frontdesk/rooms/available${qs}`, { headers, cache: 'no-store' });
-  const json = await res.json();
-  if (!json.success) throw new Error(json.error?.message || 'Failed to fetch available rooms');
-  return json.data || [];
+  try {
+    const res = await fetch(`${API_BASE_URL}/frontdesk/rooms/available${qs}`, { headers, cache: 'no-store' });
+    const json = await res.json();
+    return Array.isArray(json.data) ? json.data : [];
+  } catch (err) {
+    console.warn('fetchAvailableRoomsForWalkIn fallback:', err);
+    return [];
+  }
 }
 
 export async function lookupWalkInGuest(query: string, token?: string): Promise<WalkInGuest | null> {

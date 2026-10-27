@@ -47,10 +47,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           const storedEmail = localStorage.getItem('citystar_staff_email');
           const storedRole = localStorage.getItem('citystar_staff_role');
 
-          if (storedToken && storedEmail && (storedRole === 'admin' || storedRole === 'staff')) {
+          if (storedToken && storedEmail && (storedRole === 'super_admin' || storedRole === 'admin')) {
             hasStaffAuth = true;
             activeEmail = storedEmail;
             activeRole = storedRole;
+          } else if (storedToken && storedEmail && (storedRole === 'staff' || storedRole === 'receptionist')) {
+            router.replace('/frontdesk/walk-in');
+            return;
           }
         }
 
@@ -59,13 +62,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           const { data: { session } } = await supabase.auth.getSession();
           if (session && session.user && session.user.email) {
             const email = session.user.email;
-            if (email === 'talbashtech@gmail.com' || activeRole === 'admin') {
+            if (email === 'talbashtech@gmail.com' || activeRole === 'super_admin' || activeRole === 'admin') {
               hasStaffAuth = true;
               activeEmail = email;
-              activeRole = activeRole || 'admin';
+              activeRole = activeRole || 'super_admin';
               if (typeof window !== 'undefined') {
                 localStorage.setItem('citystar_staff_email', email);
-                localStorage.setItem('citystar_staff_role', 'admin');
+                localStorage.setItem('citystar_staff_role', activeRole);
               }
             }
           }

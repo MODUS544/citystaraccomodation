@@ -90,7 +90,7 @@ export default function WalkInPage() {
 
   // Default first room type once loaded
   useEffect(() => {
-    if (roomTypes && roomTypes.length > 0 && !selectedRoomTypeId) {
+    if (Array.isArray(roomTypes) && roomTypes.length > 0 && !selectedRoomTypeId) {
       setSelectedRoomTypeId(roomTypes[0].id);
     }
   }, [roomTypes, selectedRoomTypeId]);
@@ -109,7 +109,7 @@ export default function WalkInPage() {
 
   // Auto-select first available physical room when list changes
   useEffect(() => {
-    if (availableRooms.length > 0) {
+    if (Array.isArray(availableRooms) && availableRooms.length > 0) {
       const isCurrentSelectedStillAvailable = availableRooms.some(
         (r) => (r.id || r.room_id) === selectedRoomId
       );
@@ -122,7 +122,9 @@ export default function WalkInPage() {
   }, [availableRooms, selectedRoomId]);
 
   // Calculate Nights & Cost
-  const selectedRoomType = roomTypes?.find((r) => r.id === selectedRoomTypeId);
+  const selectedRoomType = Array.isArray(roomTypes)
+    ? roomTypes.find((r) => r.id === selectedRoomTypeId)
+    : undefined;
   const calculateNights = () => {
     const start = new Date(checkInDate);
     const end = new Date(checkOutDate);
@@ -570,7 +572,7 @@ export default function WalkInPage() {
                 <div className="py-4 text-xs text-gray-500 animate-pulse">Loading room categories...</div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  {roomTypes?.map((rt) => {
+                  {Array.isArray(roomTypes) && roomTypes.map((rt) => {
                     const isSelected = selectedRoomTypeId === rt.id;
                     return (
                       <div
@@ -606,7 +608,7 @@ export default function WalkInPage() {
                 <span className="text-[11px] text-gray-400">
                   {isLoadingRooms
                     ? 'Scanning available inventory...'
-                    : `${availableRooms.length} room(s) available`}
+                    : `${Array.isArray(availableRooms) ? availableRooms.length : 0} room(s) available`}
                 </span>
               </div>
 
@@ -615,7 +617,7 @@ export default function WalkInPage() {
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-hotel-gold" />
                   <span>Checking room inventory for date range...</span>
                 </div>
-              ) : availableRooms.length === 0 ? (
+              ) : !Array.isArray(availableRooms) || availableRooms.length === 0 ? (
                 <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs">
                   No physical rooms in this category are available for the selected dates. Please choose another suite category.
                 </div>
@@ -747,7 +749,7 @@ export default function WalkInPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={walkInMutation.isPending || availableRooms.length === 0}
+              disabled={walkInMutation.isPending || !Array.isArray(availableRooms) || availableRooms.length === 0}
               className="w-full py-3.5 rounded-xl bg-gradient-to-r from-hotel-gold via-[#C5A038] to-[#AA820A] text-hotel-dark font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_25px_rgba(212,175,55,0.4)] transition-all hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
             >
               {walkInMutation.isPending ? (
