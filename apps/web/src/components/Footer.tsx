@@ -41,18 +41,20 @@ export function Footer() {
               )}
               <div>
                 <span className="font-serif text-2xl font-bold tracking-wider text-white block leading-none">
-                  {logo?.site_title || 'CITY STAR'}
+                  {contact?.brand_name || logo?.site_title || 'CITY STAR HOTEL & RESTAURANT'}
                 </span>
                 <span className="text-[10px] tracking-[0.25em] text-hotel-gold uppercase font-medium">
-                  {logo?.tag_line || 'Hotel & Suites'}
+                  {logo?.tag_line || 'Maiduguri’s Premier 5-Star Peace & Elegance'}
                 </span>
               </div>
             </Link>
             <p className="text-gray-400 text-sm font-light leading-relaxed max-w-sm">
-              An iconic haven of modern luxury, where timeless hospitality blends effortlessly with state-of-the-art sophistication.
+              {contact?.description ||
+                'An iconic haven of modern luxury in Maiduguri, where rich Northern heritage blends effortlessly with state-of-the-art sophistication.'}
             </p>
-            <div className="pt-2 text-xs text-gray-500">
-              Target Infrastructure: Render & Supabase
+            <div className="pt-2 text-xs text-hotel-gold font-mono flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Maiduguri VIP Secure Zone</span>
             </div>
           </div>
 
@@ -69,12 +71,12 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/#amenities" className="hover:text-white transition-colors">
-                  Infinity Pool & Spa
+                  Rooftop Pool & Wellness Spa
                 </Link>
               </li>
               <li>
                 <Link href="/#experience" className="hover:text-white transition-colors">
-                  Michelin Dining
+                  Al-Maida Royal Dining
                 </Link>
               </li>
               <li>
@@ -83,8 +85,18 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/login" className="text-hotel-gold hover:text-white transition-colors font-medium flex items-center gap-1">
-                  <span>Staff & Admin Portal</span>
+                <span className="text-gray-400 hover:text-white transition-colors cursor-pointer">
+                  Corporate & Diplomatic Accounts
+                </span>
+              </li>
+              <li>
+                <span className="text-gray-400 hover:text-white transition-colors cursor-pointer">
+                  VIP Security & Airport Transfer
+                </span>
+              </li>
+              <li>
+                <Link href="/login" className="text-hotel-gold hover:text-white transition-colors font-medium flex items-center gap-1 pt-1">
+                  <span>Staff & Operations Portal</span>
                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-hotel-gold/20 text-hotel-gold uppercase tracking-wider font-semibold">Staff</span>
                 </Link>
               </li>
@@ -94,20 +106,24 @@ export function Footer() {
           {/* Contact */}
           <div>
             <h4 className="text-xs uppercase tracking-[0.2em] text-hotel-gold font-semibold mb-4">
-              Concierge
+              Location & Contact
             </h4>
             <ul className="space-y-2.5 text-sm text-gray-400">
               <li className="flex items-start gap-2">
                 <MapPin className="w-4 h-4 text-hotel-gold flex-shrink-0 mt-0.5" />
-                <span>{contact?.address || '450 Grand Star Boulevard, Metropolitan Center'}</span>
+                <span>{contact?.address || 'City Star Hotel & Restaurant, Yerwa/Yerima Road, Maiduguri, Borno State, Nigeria'}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-hotel-gold flex-shrink-0" />
-                <span>{contact?.phone || '+1 (800) 248-9782'}</span>
+                <a href={`tel:${contact?.phone || '+2349068686675'}`} className="hover:text-white transition-colors">
+                  {contact?.phone || '+234 906 868 6675'}
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 text-hotel-gold flex-shrink-0" />
-                <span>{contact?.email || 'concierge@citystarhotel.com'}</span>
+                <a href={`mailto:${contact?.email || 'citystarmaiduguri@gmail.com'}`} className="hover:text-white transition-colors">
+                  {contact?.email || 'citystarmaiduguri@gmail.com'}
+                </a>
               </li>
             </ul>
           </div>
@@ -115,20 +131,20 @@ export function Footer() {
           {/* Newsletter */}
           <div>
             <h4 className="text-xs uppercase tracking-[0.2em] text-hotel-gold font-semibold mb-4">
-              Private Journal
+              Private VIP Newsletter
             </h4>
             <p className="text-gray-400 text-xs mb-3 font-light">
-              Receive private invitations and seasonal retreat packages.
+              Receive private invitations, VIP rate offers, and seasonal retreat packages.
             </p>
             <form onSubmit={(e) => e.preventDefault()} className="space-y-2">
               <input
                 type="email"
-                placeholder="Enter your email"
+                placeholder="Enter your email address"
                 className="w-full px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold"
               />
               <button
                 type="submit"
-                className="w-full py-2 rounded-xl bg-hotel-gold hover:bg-hotel-gold-hover text-hotel-dark font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1 transition-colors"
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-hotel-gold via-[#E6CA65] to-[#AA820A] text-hotel-dark font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transition-all"
               >
                 <span>Subscribe</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
@@ -140,12 +156,12 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-4">
           <div>
-            © {new Date().getFullYear()} City Star Hotel & Suites. All rights reserved.
+            {contact?.copyright || `© ${new Date().getFullYear()} City Star Hotel & Suites, Maiduguri. All rights reserved.`}
           </div>
           <div className="flex gap-6">
             <span className="hover:text-gray-300 cursor-pointer">Privacy Policy</span>
             <span className="hover:text-gray-300 cursor-pointer">Terms of Service</span>
-            <span className="hover:text-gray-300 cursor-pointer">Accessibility</span>
+            <span className="hover:text-gray-300 cursor-pointer">Security & Accessibility</span>
           </div>
         </div>
       </div>

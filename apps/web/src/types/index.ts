@@ -79,7 +79,51 @@ export interface HeroBannerSetting {
   headline?: string;
   subheadline?: string;
   tagline?: string;
+  badge_text?: string;
   cta_text?: string;
+}
+
+export interface AccoladeItem {
+  icon?: string;
+  title: string;
+}
+
+export interface ExperienceStorySetting {
+  subtitle?: string;
+  title?: string;
+  description?: string;
+  image_url?: string;
+  image_badge?: string;
+  image_title?: string;
+  stats?: Array<{ value: string; label: string }>;
+}
+
+export interface AmenityItemSetting {
+  id?: string;
+  icon?: string;
+  title: string;
+  description: string;
+}
+
+export interface AmenitiesSectionSetting {
+  subtitle?: string;
+  title?: string;
+  description?: string;
+  items?: AmenityItemSetting[];
+}
+
+export interface TestimonialItemSetting {
+  name: string;
+  role: string;
+  quote: string;
+  rating?: number;
+}
+
+export interface TestimonialsSectionSetting {
+  subtitle?: string;
+  title?: string;
+  description?: string;
+  items?: TestimonialItemSetting[];
 }
 
 export interface GalleryImageSetting {
@@ -95,13 +139,21 @@ export interface ContactInfoSetting {
   phone?: string;
   email?: string;
   address?: string;
+  whatsapp?: string;
+  brand_name?: string;
+  description?: string;
+  copyright?: string;
   social_links?: Record<string, string>;
 }
 
 export interface SiteSettings {
   brand_logo?: BrandLogoSetting;
   hero_banner?: HeroBannerSetting;
+  accolades?: AccoladeItem[];
+  experience_story?: ExperienceStorySetting;
+  amenities_section?: AmenitiesSectionSetting;
   hotel_gallery?: { images?: GalleryImageSetting[] } | GalleryImageSetting[];
+  testimonials_section?: TestimonialsSectionSetting;
   contact_info?: ContactInfoSetting;
 }
 

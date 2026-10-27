@@ -7,12 +7,8 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: number | string): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(num);
+  if (isNaN(num)) return '₦0';
+  return `₦${new Intl.NumberFormat('en-NG').format(num)}`;
 }
 
 export function calculateNights(checkIn: string, checkOut: string): number {

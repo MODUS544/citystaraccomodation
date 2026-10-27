@@ -64,7 +64,7 @@ export function HeroSearch() {
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-hotel-gold/30 backdrop-blur-md mb-6 animate-in fade-in slide-in-from-bottom-2 duration-500">
           <Sparkles className="w-4 h-4 text-hotel-gold" />
           <span className="text-xs uppercase tracking-[0.2em] text-hotel-gold font-medium">
-            Five-Star Urban Sanctuary
+            {hero?.badge_text || "Maiduguri’s Premier 5-Star Sanctuary"}
           </span>
         </div>
 
@@ -74,17 +74,17 @@ export function HeroSearch() {
             hero.headline
           ) : (
             <>
-              Elegance Redefined, <br />
+              Maiduguri’s Premier 5-Star <br />
               <span className="bg-gradient-to-r from-hotel-gold-light via-hotel-gold to-[#AA820A] bg-clip-text text-transparent">
-                Luxury Realized
+                Peace & Elegance
               </span>
             </>
           )}
         </h1>
 
-        <p className="max-w-2xl mx-auto text-gray-300 text-base sm:text-lg font-light leading-relaxed mb-10">
+        <p className="max-w-3xl mx-auto text-gray-300 text-base sm:text-lg font-light leading-relaxed mb-10">
           {hero?.subheadline ||
-            'Immerse yourself in bespoke hospitality, panoramic skyline vistas, and world-class culinary masterpieces in the heart of the metropolis.'}
+            'Immerse yourself in bespoke Northern hospitality, panoramic views of the historic Kanem-Borno landscape, and world-class Kanuri & international culinary masterpieces in the heart of Maiduguri.'}
         </p>
 
         {/* Interactive Booking Widget */}
@@ -136,7 +136,7 @@ export function HeroSearch() {
                 <option value="1" className="bg-[#0F1626] text-white">1 Adult</option>
                 <option value="2" className="bg-[#0F1626] text-white">2 Adults</option>
                 <option value="3" className="bg-[#0F1626] text-white">3 Guests</option>
-                <option value="4" className="bg-[#0F1626] text-white">4+ Family Suite</option>
+                <option value="4" className="bg-[#0F1626] text-white">4+ Family & VVIP Suite</option>
               </select>
             </div>
 
@@ -147,7 +147,7 @@ export function HeroSearch() {
                 className="w-full h-full min-h-[50px] rounded-xl bg-gradient-to-r from-hotel-gold via-[#E6CA65] to-[#AA820A] text-hotel-dark font-bold text-sm tracking-wider uppercase hover:shadow-[0_0_25px_rgba(212,175,55,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
               >
                 <Search className="w-4 h-4 text-hotel-dark" />
-                Check Availability
+                {hero?.cta_text || 'Check Availability'}
               </button>
             </div>
           </form>

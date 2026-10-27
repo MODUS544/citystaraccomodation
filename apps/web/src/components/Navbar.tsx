@@ -104,7 +104,7 @@ export function Navbar() {
         <div className="hidden lg:flex items-center gap-5">
           <div className="flex items-center gap-2 text-xs text-gray-400">
             <Phone className="w-3.5 h-3.5 text-hotel-gold" />
-            <span>{contact?.phone || '+1 (800) 248-9782'}</span>
+            <span>{contact?.phone || '+234 906 868 6675'}</span>
           </div>
           <Link
             href="/#rooms"
