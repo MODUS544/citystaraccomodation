@@ -69,50 +69,16 @@ export function PaymentReceipt({
       >
         {/* 1. Header with Centered Logo */}
         <div className="flex flex-col items-center text-center space-y-1 mb-5 pt-1">
-          {/* Logo Badge in Black Squircle */}
-          <div className="w-32 h-16 rounded-2xl bg-black border border-[#D4AF37]/40 flex flex-col items-center justify-center p-2 mb-2 shadow-lg">
-            {receipt.logoUrl ? (
-              <div className="relative w-full h-full">
-                <Image
-                  src={receipt.logoUrl}
-                  alt="City Star Logo"
-                  fill
-                  unoptimized
-                  className="object-contain"
-                />
-              </div>
-            ) : (
-              /* Precision Gold Luxury Architectural Crown Rays Crest */
-              <div className="flex flex-col items-center justify-center">
-                <svg
-                  className="w-12 h-6 text-[#E5B869]"
-                  viewBox="0 0 54 28"
-                  fill="currentColor"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Central vertical ray */}
-                  <polygon points="26.3,24 27.7,24 27.2,3 26.8,3" />
-                  {/* Pair 1 */}
-                  <polygon points="25.2,24 26.2,24 24.3,4 23.8,4.2" />
-                  <polygon points="27.8,24 28.8,24 30.2,4.2 29.7,4" />
-                  {/* Pair 2 */}
-                  <polygon points="24.1,24 25.0,24 21.5,5.8 21.0,6.1" />
-                  <polygon points="29.0,24 29.9,24 33.0,6.1 32.5,5.8" />
-                  {/* Pair 3 */}
-                  <polygon points="23.2,24 24.0,24 18.8,8.5 18.3,8.9" />
-                  <polygon points="30.0,24 30.8,24 35.7,8.9 35.2,8.5" />
-                  {/* Pair 4 */}
-                  <polygon points="22.4,24 23.1,24 16.4,12.2 15.9,12.7" />
-                  <polygon points="30.9,24 31.6,24 38.1,12.7 37.6,12.2" />
-                  {/* Pair 5 */}
-                  <polygon points="21.7,24 22.3,24 14.5,16.5 14.0,17.1" />
-                  <polygon points="31.7,24 32.3,24 40.0,17.1 39.5,16.5" />
-                </svg>
-                <span className="text-[11px] tracking-[0.28em] text-[#E5B869] font-bold uppercase -mt-0.5 font-sans">
-                  AYERS
-                </span>
-              </div>
-            )}
+          {/* Official City Star Logo Badge */}
+          <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-[#1C1E24] border border-gray-200/40 flex items-center justify-center p-1.5 mb-2 shadow-lg relative overflow-hidden">
+            <Image
+              src={receipt.logoUrl || '/city-star-receipt-logo.jpg'}
+              alt="City Star Hotel Logo"
+              fill
+              unoptimized
+              className="object-contain"
+              priority
+            />
           </div>
 
           {/* Hotel Name & Location */}

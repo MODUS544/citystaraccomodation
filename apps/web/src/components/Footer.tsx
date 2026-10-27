@@ -24,21 +24,15 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-4">
             <Link href="/" className="flex items-center gap-3">
-              {logo?.url ? (
-                <div className="relative w-10 h-10 rounded-full border border-hotel-gold/60 overflow-hidden bg-hotel-dark">
-                  <Image
-                    src={logo.url}
-                    alt={logo.alt_text || 'City Star Logo'}
-                    fill
-                    unoptimized
-                    className="object-cover p-0.5"
-                  />
-                </div>
-              ) : (
-                <div className="w-10 h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-dark">
-                  <Star className="w-5 h-5 text-hotel-gold fill-hotel-gold/20" />
-                </div>
-              )}
+              <div className="relative w-11 h-11 rounded-full border border-hotel-gold/60 overflow-hidden bg-hotel-dark shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                <Image
+                  src={logo?.url || '/city-star-receipt-logo.jpg'}
+                  alt={logo?.alt_text || 'City Star Logo'}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+              </div>
               <div>
                 <span className="font-serif text-2xl font-bold tracking-wider text-white block leading-none">
                   {contact?.brand_name || logo?.site_title || 'CITY STAR HOTEL & RESTAURANT'}

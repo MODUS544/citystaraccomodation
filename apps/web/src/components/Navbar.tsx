@@ -39,21 +39,15 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Crest */}
         <Link href="/" className="flex items-center gap-3 group">
-          {logo?.url ? (
-            <div className="relative w-10 h-10 rounded-full border border-hotel-gold/60 overflow-hidden bg-hotel-dark/80 group-hover:border-hotel-gold transition-colors shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-              <Image
-                src={logo.url}
-                alt={logo.alt_text || 'City Star Logo'}
-                fill
-                unoptimized
-                className="object-cover p-0.5"
-              />
-            </div>
-          ) : (
-            <div className="w-10 h-10 rounded-full border border-hotel-gold/60 flex items-center justify-center bg-hotel-dark/80 group-hover:border-hotel-gold transition-colors shadow-[0_0_15px_rgba(212,175,55,0.2)]">
-              <Star className="w-5 h-5 text-hotel-gold fill-hotel-gold/20" />
-            </div>
-          )}
+          <div className="relative w-11 h-11 rounded-full border border-hotel-gold/60 overflow-hidden bg-hotel-dark/80 group-hover:border-hotel-gold transition-colors shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+            <Image
+              src={logo?.url || '/city-star-receipt-logo.jpg'}
+              alt={logo?.alt_text || 'City Star Logo'}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          </div>
           <div>
             <span className="font-serif text-xl sm:text-2xl font-bold tracking-wider text-white block leading-none">
               {logo?.site_title || 'CITY STAR'}
