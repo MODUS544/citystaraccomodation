@@ -1622,7 +1622,7 @@ export default function BrandingCMSPage() {
             <div className="p-6 rounded-2xl bg-black/40 border border-white/10 flex justify-center">
               <PaymentReceipt
                 receipt={{
-                  receiptNo: 'CSH-000125 (Sample)',
+                  receiptNo: 'CH.MAVBU (Sample)',
                   date: '2026-10-27',
                   guestName: 'Abdullahi Musa (Sample)',
                   roomNo: '204',

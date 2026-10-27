@@ -322,11 +322,11 @@ export async function fetchAdminOverview(token?: string): Promise<AdminOverviewR
     todaysActions: [
       {
         id: 'mock-1',
-        booking_reference: 'CSH-20261026-F91A01',
+        booking_reference: 'CH.MAVBU',
         check_in_date: new Date().toISOString().split('T')[0],
         check_out_date: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
         total_nights: 2,
-        total_amount: 300,
+        total_amount: 500000,
         status: 'confirmed',
         guest_name: 'Lord Alistair Sterling',
         guest_email: 'sterling@luxury.co.uk',
@@ -339,11 +339,11 @@ export async function fetchAdminOverview(token?: string): Promise<AdminOverviewR
       },
       {
         id: 'mock-2',
-        booking_reference: 'CSH-20261026-B82C14',
+        booking_reference: 'CH.KLMNO',
         check_in_date: new Date(Date.now() - 86400000 * 3).toISOString().split('T')[0],
         check_out_date: new Date().toISOString().split('T')[0],
         total_nights: 3,
-        total_amount: 360,
+        total_amount: 540000,
         status: 'checked_in',
         guest_name: 'Dr. Vivienne Moreau',
         guest_email: 'moreau@sorbonne.fr',
@@ -355,7 +355,7 @@ export async function fetchAdminOverview(token?: string): Promise<AdminOverviewR
       },
       {
         id: 'mock-3',
-        booking_reference: 'CSH-20261026-P03D99',
+        booking_reference: 'CH.ROYAL',
         check_in_date: new Date().toISOString().split('T')[0],
         check_out_date: new Date(Date.now() + 86400000 * 4).toISOString().split('T')[0],
         total_nights: 4,

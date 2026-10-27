@@ -1,12 +1,8 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.frontdeskRouter = void 0;
 const express_1 = require("express");
 const zod_1 = require("zod");
-const crypto_1 = __importDefault(require("crypto"));
 const database_1 = require("../config/database");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const validate_middleware_1 = require("../middleware/validate.middleware");
@@ -162,10 +158,13 @@ exports.frontdeskRouter.post('/walk-in', (0, validate_middleware_1.validateReque
         const totalNights = Math.max(1, Math.round((checkOutMs - checkInMs) / (1000 * 60 * 60 * 24)));
         const basePrice = parseFloat(room.base_price_per_night);
         const totalAmount = (totalNights * basePrice).toFixed(2);
-        // 4. Generate human-readable booking reference
-        const dateSegment = checkInDate.replace(/-/g, '');
-        const hexSegment = crypto_1.default.randomBytes(3).toString('hex').toUpperCase();
-        const bookingReference = `CSH-${dateSegment}-${hexSegment}`;
+        // 4. Generate custom booking reference: CH. followed by 5 uppercase letters (e.g. CH.MAVBU)
+        const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        let refLetters = '';
+        for (let i = 0; i < 5; i++) {
+            refLetters += letters.charAt(Math.floor(Math.random() * letters.length));
+        }
+        const bookingReference = `CH.${refLetters}`;
         const initialStatus = autoCheckIn ? 'checked_in' : 'confirmed';
         // 5. Insert Booking Record
         const insertBookingQuery = `

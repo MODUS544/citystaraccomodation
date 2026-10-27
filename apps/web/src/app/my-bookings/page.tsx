@@ -41,7 +41,7 @@ export default function MyBookingsPage() {
           Manage Your Reservation
         </h1>
         <p className="text-gray-400 text-sm font-light max-w-md mx-auto">
-          Enter your unique booking reference number (e.g. CSH-20261026-A1B2C3) to view reservation details.
+          Enter your unique booking reference number (e.g. CH.MAVBU) to view reservation details.
         </p>
       </div>
 
@@ -52,7 +52,7 @@ export default function MyBookingsPage() {
             <Search className="w-4 h-4 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Enter Booking Reference (e.g. CSH-20261026-F98A1B)"
+              placeholder="Enter Booking Reference (e.g. CH.MAVBU)"
               value={reference}
               onChange={(e) => setReference(e.target.value)}
               className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-gray-500 font-mono uppercase focus:outline-none focus:border-hotel-gold"

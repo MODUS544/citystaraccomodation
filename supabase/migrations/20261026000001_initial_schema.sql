@@ -255,8 +255,14 @@ BEGIN
             USING ERRCODE = '23P01';
     END IF;
 
-    -- 3. Generate booking reference: CSH-YYYYMMDD-HEX(6)
-    v_booking_ref := 'CSH-' || to_char(CURRENT_DATE, 'YYYYMMDD') || '-' || upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+    -- 3. Generate custom booking reference: CH. followed by 5 uppercase letters (e.g. CH.MAVBU)
+    LOOP
+        v_booking_ref := 'CH.' || array_to_string(ARRAY(
+            SELECT chr((65 + floor(random() * 26))::integer)
+            FROM generate_series(1, 5)
+        ), '');
+        EXIT WHEN NOT EXISTS (SELECT 1 FROM public.bookings WHERE booking_reference = v_booking_ref);
+    END LOOP;
 
     -- 4. Insert booking
     INSERT INTO public.bookings (

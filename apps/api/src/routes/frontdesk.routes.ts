@@ -208,10 +208,13 @@ frontdeskRouter.post(
       const basePrice = parseFloat(room.base_price_per_night);
       const totalAmount = (totalNights * basePrice).toFixed(2);
 
-      // 4. Generate human-readable booking reference
-      const dateSegment = checkInDate.replace(/-/g, '');
-      const hexSegment = crypto.randomBytes(3).toString('hex').toUpperCase();
-      const bookingReference = `CSH-${dateSegment}-${hexSegment}`;
+      // 4. Generate custom booking reference: CH. followed by 5 uppercase letters (e.g. CH.MAVBU)
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      let refLetters = '';
+      for (let i = 0; i < 5; i++) {
+        refLetters += letters.charAt(Math.floor(Math.random() * letters.length));
+      }
+      const bookingReference = `CH.${refLetters}`;
 
       const initialStatus = autoCheckIn ? 'checked_in' : 'confirmed';
 

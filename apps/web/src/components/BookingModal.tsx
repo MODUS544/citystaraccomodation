@@ -81,7 +81,7 @@ export function BookingModal({
       });
 
       setConfirmedBooking({
-        reference: bookingData.booking_reference || bookingData.id || 'CSH-000125',
+        reference: bookingData.booking_reference || bookingData.id || 'CH.MAVBU',
         totalAmount: grandTotal,
         nights,
         guestName: fullName || 'Abdullahi Musa',

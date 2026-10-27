@@ -775,7 +775,7 @@ export default function WalkInPage() {
           <div className="my-8 max-w-md w-full">
             <PaymentReceipt
               receipt={{
-                receiptNo: bookingSuccessData.bookingReference || 'CSH-000125',
+                receiptNo: bookingSuccessData.bookingReference || 'CH.MAVBU',
                 guestName: fullName || 'Abdullahi Musa',
                 roomNo: bookingSuccessData.roomNumber || '204',
                 roomName: selectedRoomType?.name || 'Deluxe Room',
