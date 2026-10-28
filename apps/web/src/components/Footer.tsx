@@ -3,11 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { usePathname } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Star, MapPin, Mail, Phone, ArrowUpRight } from 'lucide-react';
 import { fetchPublicSettings } from '../lib/api';
 
 export function Footer() {
+  const pathname = usePathname();
   const { data: siteSettings } = useQuery({
     queryKey: ['public-settings'],
     queryFn: () => fetchPublicSettings(),
@@ -16,6 +18,14 @@ export function Footer() {
 
   const logo = siteSettings?.brand_logo;
   const contact = siteSettings?.contact_info;
+
+  // Do not render guest footer on staff or admin portal routes
+  const isPortalRoute =
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/staff') ||
+    pathname.startsWith('/frontdesk');
+
+  if (isPortalRoute) return null;
 
   return (
     <footer className="bg-[#05080E] border-t border-white/10 text-white pt-16 pb-12">

@@ -36,6 +36,7 @@ import {
   WalkInBookingPayload,
 } from '../../../../types';
 import { PaymentReceipt } from '../../../../components/PaymentReceipt';
+import { formatCurrency } from '../../../../lib/utils';
 
 export default function WalkInPage() {
   const queryClient = useQueryClient();
@@ -587,7 +588,7 @@ export default function WalkInPage() {
                       >
                         <div className="text-xs font-bold text-white mb-1">{rt.name}</div>
                         <div className="text-[11px] text-hotel-gold font-semibold">
-                          ${Number(rt.base_price_per_night || rt.basePrice || 0)}{' '}
+                          {formatCurrency(rt.base_price_per_night || rt.basePrice || 0)}{' '}
                           <span className="text-[9px] text-gray-400">/ night</span>
                         </div>
                         <div className="text-[10px] text-gray-400 mt-1">
@@ -671,7 +672,7 @@ export default function WalkInPage() {
               <div className="flex items-center justify-between text-gray-400">
                 <span>Rate per Night:</span>
                 <span className="text-white font-medium">
-                  ${Number(selectedRoomType?.base_price_per_night || selectedRoomType?.basePrice || 0)}
+                  {formatCurrency(selectedRoomType?.base_price_per_night || selectedRoomType?.basePrice || 0)}
                 </span>
               </div>
               <div className="flex items-center justify-between text-gray-400">
@@ -680,7 +681,7 @@ export default function WalkInPage() {
               </div>
               <div className="pt-2 border-t border-white/10 flex items-center justify-between text-sm">
                 <span className="font-bold text-white">Total Amount Due:</span>
-                <span className="font-serif text-lg font-bold text-hotel-gold">${totalPrice}</span>
+                <span className="font-serif text-lg font-bold text-hotel-gold">{formatCurrency(totalPrice)}</span>
               </div>
             </div>
 
