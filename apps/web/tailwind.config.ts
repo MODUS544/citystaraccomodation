@@ -10,6 +10,22 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        travl: {
+          primary: '#135846', // Travl Hunter Forest Green
+          'primary-dark': '#0d4334',
+          'primary-light': '#ebf7f2',
+          coral: '#FE5757', // Travl Signature Coral Red
+          'coral-light': '#FFEBEB',
+          canvas: '#F4F6F9',
+          card: '#FFFFFF',
+          border: '#EAEFF4',
+          text: '#1E2538',
+          muted: '#7E8BA0',
+          blue: '#4A85F6',
+          'blue-light': '#EBF4FF',
+          amber: '#F59E0B',
+          'amber-light': '#FFF8E6',
+        },
         hotel: {
           dark: '#080C15',
           card: '#0F1626',
@@ -28,6 +44,20 @@ const config: Config = {
       fontFamily: {
         serif: ['var(--font-playfair)', 'Georgia', 'serif'],
         sans: ['var(--font-outfit)', 'Inter', 'sans-serif'],
+      },
+      keyframes: {
+        'fade-slide-up': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'pulse-soft': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.04)' },
+        },
+      },
+      animation: {
+        'fade-slide-up': 'fade-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'pulse-soft': 'pulse-soft 2s infinite ease-in-out',
       },
       backgroundImage: {
         'gold-gradient': 'linear-gradient(135deg, #F3E5AB 0%, #D4AF37 50%, #AA820A 100%)',

@@ -250,6 +250,7 @@ export interface AdminActionBooking {
   floor: number;
   room_type_name: string;
   special_requests?: string;
+  created_at?: string;
 }
 
 export interface AdminOverviewResponse {

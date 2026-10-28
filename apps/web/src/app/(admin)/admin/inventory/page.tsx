@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bed, RefreshCw, CheckCircle, AlertCircle, Wrench, Sparkles, Filter } from 'lucide-react';
+import { Bed, RefreshCw, CheckCircle, AlertCircle, Wrench, Sparkles, Filter, ShieldCheck } from 'lucide-react';
 import { fetchAdminRooms, updateRoomStatus, AdminRoom } from '../../../../lib/api';
 import { formatCurrency } from '../../../../lib/utils';
 
@@ -41,18 +41,23 @@ export default function RoomInventoryPage() {
       })
     : [];
 
+  const availableCount = Array.isArray(rooms) ? rooms.filter(r => r.status === 'available').length : 0;
+  const occupiedCount = Array.isArray(rooms) ? rooms.filter(r => r.status === 'occupied').length : 0;
+  const maintenanceCount = Array.isArray(rooms) ? rooms.filter(r => r.status === 'maintenance').length : 0;
+  const cleaningCount = Array.isArray(rooms) ? rooms.filter(r => r.status === 'cleaning').length : 0;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-slide-up">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
+          <span className="text-xs uppercase tracking-[0.2em] text-[#135846] font-bold block mb-1">
             Physical Inventory
           </span>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white">
-            Room Grid & Maintenance
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1E2538] tracking-tight">
+            Room Grid & Housekeeping Controls
           </h1>
-          <p className="text-gray-400 text-xs sm:text-sm font-light mt-1">
+          <p className="text-[#818E9B] text-xs sm:text-sm font-normal mt-1">
             Toggle room operational states between available, occupied, housekeeping, and maintenance.
           </p>
         </div>
@@ -60,9 +65,9 @@ export default function RoomInventoryPage() {
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/10 transition-colors self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EAEFF4] text-xs font-semibold text-[#556376] hover:text-[#1E2538] hover:border-[#D1D9E2] shadow-sm hover:shadow transition-all self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-hotel-gold' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-[#135846]' : 'text-[#818E9B]'}`} />
           <span>Refresh Grid</span>
         </button>
       </div>
@@ -70,102 +75,115 @@ export default function RoomInventoryPage() {
       {/* Notification Toast */}
       {notification && (
         <div
-          className={`p-4 rounded-2xl flex items-center gap-3 text-sm animate-in fade-in slide-in-from-top-2 duration-300 ${
+          className={`p-4 rounded-2xl flex items-center gap-3 text-sm animate-in fade-in slide-in-from-top-2 duration-300 shadow-md ${
             notification.type === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-              : 'bg-red-500/10 border border-red-500/30 text-red-300'
+              ? 'bg-[#E8F8F0] border border-[#135846]/20 text-[#135846]'
+              : 'bg-[#FFEBEB] border border-[#FE5757]/20 text-[#FE5757]'
           }`}
         >
           {notification.type === 'success' ? (
-            <CheckCircle className="w-5 h-5 flex-shrink-0 text-emerald-400" />
+            <CheckCircle className="w-5 h-5 flex-shrink-0 text-[#135846]" />
           ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-400" />
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-[#FE5757]" />
           )}
-          <span>{notification.message}</span>
+          <span className="font-medium">{notification.message}</span>
         </div>
       )}
 
       {/* Main Container */}
-      <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
-        {/* Controls / Filter Pills */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="text-gray-400">Filter By Status:</span>
-            {['all', 'available', 'occupied', 'maintenance', 'cleaning'].map((statusKey) => (
-              <button
-                key={statusKey}
-                onClick={() => setStatusFilter(statusKey)}
-                className={`px-3 py-1.5 rounded-xl capitalize transition-colors ${
-                  statusFilter === statusKey
-                    ? 'bg-hotel-gold text-hotel-dark font-bold'
-                    : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                {statusKey}
-              </button>
-            ))}
+      <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 sm:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.03)] space-y-6">
+        {/* Underlined Filter Tabs (Travl Style) */}
+        <div className="flex items-center justify-between gap-4 border-b border-[#EAEFF4] pb-px">
+          <div className="flex items-center gap-6 overflow-x-auto text-sm">
+            {[
+              { id: 'all', label: `All Rooms (${rooms?.length || 0})` },
+              { id: 'available', label: `Available (${availableCount})`, color: '#135846' },
+              { id: 'occupied', label: `Occupied (${occupiedCount})`, color: '#1D4ED8' },
+              { id: 'maintenance', label: `Maintenance (${maintenanceCount})`, color: '#FE5757' },
+              { id: 'cleaning', label: `Housekeeping (${cleaningCount})`, color: '#D97706' },
+            ].map((tab) => {
+              const isActive = statusFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setStatusFilter(tab.id)}
+                  className={`pb-3.5 font-semibold text-sm transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                    isActive
+                      ? 'text-[#135846] border-b-2 border-[#135846]'
+                      : 'text-[#818E9B] hover:text-[#1E2538]'
+                  }`}
+                >
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div className="text-xs text-gray-400">
-            Total Displayed: <strong className="text-white">{filteredRooms.length} Rooms</strong>
+          <div className="text-xs text-[#818E9B] font-medium hidden sm:block">
+            Showing <strong className="text-[#1E2538] font-bold">{filteredRooms.length}</strong> of {rooms?.length || 0} Suites
           </div>
         </div>
 
         {/* Room Grid Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-300">
-            <thead className="text-[11px] uppercase tracking-wider text-gray-400 border-b border-white/10 bg-white/5">
+        <div className="overflow-x-auto -mx-6 sm:mx-0">
+          <table className="w-full text-left text-sm text-[#556376]">
+            <thead className="text-[11px] uppercase tracking-wider text-[#818E9B] bg-[#F9FAFC] border-y border-[#EAEFF4]">
               <tr>
-                <th className="py-3.5 px-4 font-semibold">Room & Floor</th>
+                <th className="py-3.5 px-6 font-semibold">Room & Floor</th>
                 <th className="py-3.5 px-4 font-semibold">Suite Classification</th>
                 <th className="py-3.5 px-4 font-semibold">Max Occupancy</th>
                 <th className="py-3.5 px-4 font-semibold">Nightly Base Rate</th>
                 <th className="py-3.5 px-4 font-semibold">Operational Status</th>
-                <th className="py-3.5 px-4 font-semibold text-right">Quick Status Toggle</th>
+                <th className="py-3.5 px-6 font-semibold text-right">Quick Status Toggle</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-[#EAEFF4]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-500">
-                    Loading physical room inventory...
+                  <td colSpan={6} className="text-center py-12 text-[#818E9B]">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#135846]" />
+                      <span>Loading physical room inventory...</span>
+                    </div>
                   </td>
                 </tr>
               ) : filteredRooms.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-500">
+                  <td colSpan={6} className="text-center py-12 text-[#818E9B]">
                     No rooms found matching the selected filter.
                   </td>
                 </tr>
               ) : (
                 filteredRooms.map((room: AdminRoom) => {
                   return (
-                    <tr key={room.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={room.id} className="hover:bg-[#F8FAFC] transition-colors group">
                       {/* Room Number & Floor */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center font-mono font-bold text-white text-base">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <span className="w-11 h-11 rounded-2xl bg-[#F4F6F9] border border-[#EAEFF4] flex items-center justify-center font-mono font-bold text-[#1E2538] text-sm group-hover:border-[#135846]/40 transition-colors">
                             #{room.room_number}
                           </span>
                           <div>
-                            <div className="font-semibold text-white">Room {room.room_number}</div>
-                            <div className="text-xs text-gray-500">Floor {room.floor}</div>
+                            <div className="font-semibold text-[#1E2538] group-hover:text-[#135846] transition-colors">
+                              Room {room.room_number}
+                            </div>
+                            <div className="text-xs text-[#818E9B]">Floor {room.floor}</div>
                           </div>
                         </div>
                       </td>
 
                       {/* Suite Classification */}
-                      <td className="py-4 px-4 font-medium text-white">
+                      <td className="py-4 px-4 font-medium text-[#1E2538]">
                         {room.room_type_name}
                       </td>
 
                       {/* Occupancy */}
-                      <td className="py-4 px-4 text-xs text-gray-300">
+                      <td className="py-4 px-4 text-xs text-[#556376]">
                         {room.max_occupancy} Guests
                       </td>
 
                       {/* Price */}
-                      <td className="py-4 px-4 font-serif font-bold text-hotel-gold">
+                      <td className="py-4 px-4 font-serif font-bold text-[#135846]">
                         {formatCurrency(room.base_price_per_night)}
                       </td>
 
@@ -174,14 +192,14 @@ export default function RoomInventoryPage() {
                         <span
                           className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold capitalize ${
                             room.status === 'available'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-[#E8F8F0] text-[#135846]'
                               : room.status === 'occupied'
-                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                              ? 'bg-[#EBF4FF] text-[#1D4ED8]'
                               : room.status === 'maintenance'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+                              ? 'bg-[#FFEBEB] text-[#FE5757]'
                               : room.status === 'cleaning'
-                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
-                              : 'bg-gray-500/10 text-gray-400 border border-gray-500/30'
+                              ? 'bg-[#FFF8E6] text-[#D97706]'
+                              : 'bg-[#F1F3F6] text-[#556376]'
                           }`}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -190,7 +208,7 @@ export default function RoomInventoryPage() {
                       </td>
 
                       {/* Dropdown Toggle */}
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-4 px-6 text-right">
                         <select
                           value={room.status}
                           disabled={roomMutation.isPending}
@@ -200,13 +218,13 @@ export default function RoomInventoryPage() {
                               status: e.target.value as any,
                             })
                           }
-                          className="bg-white/5 border border-white/10 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-hotel-gold cursor-pointer [color-scheme:dark]"
+                          className="bg-[#F4F6F9] border border-[#EAEFF4] rounded-xl px-3 py-1.5 text-xs text-[#1E2538] font-semibold focus:outline-none focus:border-[#135846] hover:border-[#D1D9E2] cursor-pointer transition-colors"
                         >
-                          <option value="available" className="bg-[#0F1626]">Set Available</option>
-                          <option value="occupied" className="bg-[#0F1626]">Set Occupied</option>
-                          <option value="maintenance" className="bg-[#0F1626]">Set Maintenance</option>
-                          <option value="cleaning" className="bg-[#0F1626]">Set Cleaning</option>
-                          <option value="out_of_order" className="bg-[#0F1626]">Set Out of Order</option>
+                          <option value="available">Set Available</option>
+                          <option value="occupied">Set Occupied</option>
+                          <option value="maintenance">Set Maintenance</option>
+                          <option value="cleaning">Set Cleaning</option>
+                          <option value="out_of_order">Set Out of Order</option>
                         </select>
                       </td>
                     </tr>

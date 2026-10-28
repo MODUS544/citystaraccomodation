@@ -18,6 +18,8 @@ import {
   ExternalLink,
   Check,
   Lock,
+  ArrowUpRight,
+  TrendingUp,
 } from 'lucide-react';
 import { fetchAdminOverview, updateBookingStatus, AdminActionBooking } from '../../../lib/api';
 import { formatCurrency, formatDate } from '../../../lib/utils';
@@ -75,28 +77,30 @@ export default function AdminDashboardPage() {
     return true;
   });
 
+  const pendingCount = todaysActions.filter((b) => b.status === 'pending').length;
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-slide-up">
       {/* Top Banner / Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
-            Command Center
+          <span className="text-xs uppercase tracking-[0.2em] text-[#135846] font-bold block mb-1">
+            Dashboard Overview
           </span>
-          <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white">
-            Operations & Front Desk
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1E2538] tracking-tight">
+            Hotel Operations & Front Desk
           </h1>
-          <p className="text-gray-400 text-xs sm:text-sm font-light mt-1">
-            Real-time occupancy metrics, guest check-ins, and room inventory management.
+          <p className="text-[#818E9B] text-xs sm:text-sm font-normal mt-1">
+            Real-time occupancy metrics, VIP arrivals, and room inventory management.
           </p>
         </div>
 
         <button
           onClick={() => refetch()}
           disabled={isFetching}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-gray-300 hover:text-white hover:bg-white/10 transition-colors self-start sm:self-auto"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EAEFF4] text-xs font-semibold text-[#556376] hover:text-[#1E2538] hover:border-[#D1D9E2] shadow-sm hover:shadow transition-all self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-hotel-gold' : ''}`} />
+          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-[#135846]' : 'text-[#818E9B]'}`} />
           <span>Refresh Live Data</span>
         </button>
       </div>
@@ -104,124 +108,136 @@ export default function AdminDashboardPage() {
       {/* Notification Toast */}
       {notification && (
         <div
-          className={`p-4 rounded-2xl flex items-center gap-3 text-sm animate-in fade-in slide-in-from-top-2 duration-300 ${
+          className={`p-4 rounded-2xl flex items-center gap-3 text-sm animate-in fade-in slide-in-from-top-2 duration-300 shadow-md ${
             notification.type === 'success'
-              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-300'
-              : 'bg-red-500/10 border border-red-500/30 text-red-300'
+              ? 'bg-[#E8F8F0] border border-[#135846]/20 text-[#135846]'
+              : 'bg-[#FFEBEB] border border-[#FE5757]/20 text-[#FE5757]'
           }`}
         >
           {notification.type === 'success' ? (
-            <CheckCircle className="w-5 h-5 flex-shrink-0 text-emerald-400" />
+            <CheckCircle className="w-5 h-5 flex-shrink-0 text-[#135846]" />
           ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-400" />
+            <AlertCircle className="w-5 h-5 flex-shrink-0 text-[#FE5757]" />
           )}
-          <span>{notification.message}</span>
+          <span className="font-medium">{notification.message}</span>
         </div>
       )}
 
-      {/* 4-Card KPI Summary Banner */}
+      {/* 4-Card KPI Summary Banner (Travl Light Hospitality Style) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* KPI 1: Occupancy Rate */}
-        <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
               Live Occupancy
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-hotel-gold/10 border border-hotel-gold/30 flex items-center justify-center text-hotel-gold">
+            <div className="w-11 h-11 rounded-2xl bg-[#E8F8F0] text-[#135846] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
               <Bed className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-serif text-3xl font-bold text-white">
+            <span className="text-3xl font-bold text-[#1E2538] font-sans">
               {isLoading ? '...' : `${kpis?.occupancyRate || 0}%`}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-[#818E9B] font-medium">
               ({kpis?.occupiedRooms || 0} / {kpis?.totalRooms || 0} Rooms)
             </span>
           </div>
-          <div className="text-xs text-gray-400 font-light flex items-center gap-2 mt-3">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{kpis?.availableRooms || 0} Available • {kpis?.maintenanceRooms || 0} Maint.</span>
+          <div className="text-xs text-[#556376] flex items-center gap-2 mt-3 pt-3 border-t border-[#F4F6F9]">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#135846] animate-pulse" />
+            <span>
+              <strong className="text-[#135846] font-semibold">{kpis?.availableRooms || 0}</strong> Available • {kpis?.maintenanceRooms || 0} Maint.
+            </span>
           </div>
         </div>
 
         {/* KPI 2: Revenue MTD & YTD */}
-        <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-              Revenue (Month-To-Date)
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
+              Revenue (MTD)
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <div className="w-11 h-11 rounded-2xl bg-[#FFF8E6] text-[#D97706] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
               <DollarSign className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
             {isLoading ? (
-              <span className="font-serif text-3xl font-bold text-hotel-gold">...</span>
+              <span className="font-serif text-3xl font-bold text-[#135846]">...</span>
             ) : kpis?.monthToDateRevenue === null ? (
-              <span className="text-xs font-semibold text-gray-400 flex items-center gap-1.5 py-1.5">
-                <Lock className="w-3.5 h-3.5 text-hotel-gold" />
-                <span>Restricted (Super Admin)</span>
+              <span className="text-xs font-semibold text-[#818E9B] flex items-center gap-1.5 py-1.5">
+                <Lock className="w-3.5 h-3.5 text-[#D97706]" />
+                <span>Super Admin Protected</span>
               </span>
             ) : (
-              <span className="font-serif text-3xl font-bold text-hotel-gold">
+              <span className="text-2xl sm:text-3xl font-bold text-[#135846] font-serif">
                 {formatCurrency(kpis?.monthToDateRevenue || 0)}
               </span>
             )}
           </div>
-          <div className="text-xs text-gray-400 font-light mt-3">
+          <div className="text-xs text-[#556376] mt-3 pt-3 border-t border-[#F4F6F9] flex items-center justify-between">
             {kpis?.yearToDateRevenue === null ? (
-              <span className="text-gray-500">YTD Financials Protected</span>
+              <span className="text-[#818E9B]">Financials Protected</span>
             ) : (
               <>
-                YTD: <strong className="text-white">{formatCurrency(kpis?.yearToDateRevenue || 0)}</strong>
+                <span className="text-[#818E9B]">YTD:</span>
+                <strong className="text-[#1E2538] font-semibold">{formatCurrency(kpis?.yearToDateRevenue || 0)}</strong>
               </>
             )}
           </div>
         </div>
 
         {/* KPI 3: Check-Ins & Pending Requests */}
-        <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-              Today's Arrivals & Requests
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
+              Today's Arrivals
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
+            <div className="w-11 h-11 rounded-2xl bg-[#EBF4FF] text-[#1D4ED8] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
               <LogIn className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-serif text-3xl font-bold text-white">
+            <span className="text-3xl font-bold text-[#1E2538] font-sans">
               {isLoading ? '...' : kpis?.checkInsToday || 0}
             </span>
-            <span className="text-xs text-gray-400">Today's Arrivals</span>
+            <span className="text-xs text-[#818E9B] font-medium">Guests Expected</span>
           </div>
-          <div className="text-xs text-amber-400 font-medium mt-3 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span>
-              {kpis?.pendingBookings ?? todaysActions.filter(b => b.status === 'pending').length} New Pending Requests
-            </span>
+          <div className="text-xs mt-3 pt-3 border-t border-[#F4F6F9] flex items-center gap-1.5">
+            {pendingCount > 0 ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-[#FE5757] animate-pulse" />
+                <span className="text-[#FE5757] font-semibold">
+                  {pendingCount} New Pending Requests
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-[#135846]" />
+                <span className="text-[#135846] font-medium">All Arrivals Scheduled</span>
+              </>
+            )}
           </div>
         </div>
 
-        {/* KPI 4: Check-Outs Today */}
-        <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 shadow-xl relative overflow-hidden group">
+        {/* KPI 4: Check-Outs & Departures */}
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs uppercase tracking-wider text-gray-400 font-semibold">
-              Check-Outs & Active Stays
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
+              Today's Departures
             </span>
-            <div className="w-10 h-10 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
+            <div className="w-11 h-11 rounded-2xl bg-[#FFEBEB] text-[#FE5757] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
               <LogOut className="w-5 h-5" />
             </div>
           </div>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-serif text-3xl font-bold text-white">
+            <span className="text-3xl font-bold text-[#1E2538] font-sans">
               {isLoading ? '...' : kpis?.checkOutsToday || 0}
             </span>
-            <span className="text-xs text-gray-400">Today's Departures</span>
+            <span className="text-xs text-[#818E9B] font-medium">Check-outs Scheduled</span>
           </div>
-          <div className="text-xs text-purple-400/80 font-light mt-3 flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
+          <div className="text-xs text-[#556376] mt-3 pt-3 border-t border-[#F4F6F9] flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-[#818E9B]" />
             <span>
               {kpis?.activeBookings ?? todaysActions.length} Total Bookings in System
             </span>
@@ -229,102 +245,90 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Immediate Action Center: Live Reservations & Front Desk Queue */}
-      <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-xl space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+      {/* Immediate Action Center: Live Reservations & Front Desk Queue (Travl Table Style) */}
+      <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 sm:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.03)] space-y-6">
+        {/* Card Header & Controls */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-2">
           <div>
-            <h2 className="font-serif text-2xl font-bold text-white flex items-center gap-2">
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-[#1E2538] flex items-center gap-3">
               <span>Live Reservations & Front Desk Queue</span>
-              <span className="text-xs px-2.5 py-0.5 rounded-full bg-hotel-gold/10 text-hotel-gold border border-hotel-gold/30 font-sans">
-                {filteredActions.length} Reservations
+              <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#E8F8F0] text-[#135846] font-sans font-bold">
+                {filteredActions.length} Records
               </span>
             </h2>
-            <p className="text-gray-400 text-xs sm:text-sm font-light mt-1">
-              Trigger instant check-in, review new booking requests, manage departures, and maintain room occupancy.
+            <p className="text-[#818E9B] text-xs sm:text-sm font-normal mt-1">
+              Trigger instant check-in, review pending requests, release rooms upon departure, and manage guest folios.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5">
-            {/* Filter Pills */}
-            <div className="flex items-center gap-1 bg-white/5 p-1 rounded-2xl border border-white/10 text-xs font-semibold">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`px-3 py-1.5 rounded-xl transition-colors ${
-                  activeTab === 'all' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                All ({todaysActions.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('pending')}
-                className={`px-3 py-1.5 rounded-xl transition-colors flex items-center gap-1.5 ${
-                  activeTab === 'pending' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                <span>Pending</span>
-                {todaysActions.filter((b) => b.status === 'pending').length > 0 && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                )}
-              </button>
-              <button
-                onClick={() => setActiveTab('arrivals')}
-                className={`px-3 py-1.5 rounded-xl transition-colors ${
-                  activeTab === 'arrivals' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Arrivals
-              </button>
-              <button
-                onClick={() => setActiveTab('in_house')}
-                className={`px-3 py-1.5 rounded-xl transition-colors ${
-                  activeTab === 'in_house' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                In-House
-              </button>
-              <button
-                onClick={() => setActiveTab('departures')}
-                className={`px-3 py-1.5 rounded-xl transition-colors ${
-                  activeTab === 'departures' ? 'bg-hotel-gold text-hotel-dark font-bold' : 'text-gray-400 hover:text-white'
-                }`}
-              >
-                Departures
-              </button>
-            </div>
-
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               href="/admin/bookings"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-hotel-gold hover:bg-hotel-gold/10 hover:border-hotel-gold/30 transition-all"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#135846] hover:bg-[#0e4335] text-white text-xs font-semibold shadow-sm hover:shadow transition-all"
             >
-              <span>Full Registry</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Full Guest Registry</span>
+              <ArrowUpRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
 
+        {/* Travl Underlined Filter Tabs */}
+        <div className="flex items-center gap-6 border-b border-[#EAEFF4] overflow-x-auto pb-px text-sm">
+          {[
+            { id: 'all', label: `All (${todaysActions.length})` },
+            { id: 'pending', label: `Pending`, badge: pendingCount },
+            { id: 'arrivals', label: 'Arrivals' },
+            { id: 'in_house', label: 'In-House' },
+            { id: 'departures', label: 'Departures' },
+          ].map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`pb-3.5 font-semibold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
+                  isActive
+                    ? 'text-[#135846] border-b-2 border-[#135846]'
+                    : 'text-[#818E9B] hover:text-[#1E2538]'
+                }`}
+              >
+                <span>{tab.label}</span>
+                {Boolean(tab.badge && tab.badge > 0) && (
+                  <span className="px-1.5 py-0.5 rounded-full bg-[#FE5757] text-white text-[10px] font-bold">
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Action Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-300">
-            <thead className="text-[11px] uppercase tracking-wider text-gray-400 border-b border-white/10 bg-white/5">
+        <div className="overflow-x-auto -mx-6 sm:mx-0">
+          <table className="w-full text-left text-sm text-[#556376]">
+            <thead className="text-[11px] uppercase tracking-wider text-[#818E9B] bg-[#F9FAFC] border-y border-[#EAEFF4]">
               <tr>
-                <th className="py-3.5 px-4 font-semibold">Guest & Contact</th>
+                <th className="py-3.5 px-6 font-semibold">Guest & Contact</th>
                 <th className="py-3.5 px-4 font-semibold">Assigned Suite</th>
                 <th className="py-3.5 px-4 font-semibold">Stay Dates</th>
                 <th className="py-3.5 px-4 font-semibold">Total Amount</th>
                 <th className="py-3.5 px-4 font-semibold">Status</th>
-                <th className="py-3.5 px-4 font-semibold text-right">Front Desk Action</th>
+                <th className="py-3.5 px-6 font-semibold text-right">Front Desk Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/10">
+            <tbody className="divide-y divide-[#EAEFF4]">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-500">
-                    Loading live front desk schedules...
+                  <td colSpan={6} className="text-center py-12 text-[#818E9B]">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-4 h-4 animate-spin text-[#135846]" />
+                      <span>Loading live front desk schedules...</span>
+                    </div>
                   </td>
                 </tr>
               ) : filteredActions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-500">
+                  <td colSpan={6} className="text-center py-12 text-[#818E9B]">
                     No reservations found matching the current filter.
                   </td>
                 </tr>
@@ -339,66 +343,83 @@ export default function AdminDashboardPage() {
                   const checkInFormatted = formatDate(booking.check_in_date);
                   const isTodayArrival = booking.check_in_date?.startsWith(todayStr);
 
+                  // Extract guest initials for Travl circular avatar
+                  const initials = (booking.guest_name || 'Guest')
+                    .split(' ')
+                    .map((n) => n[0])
+                    .join('')
+                    .substring(0, 2)
+                    .toUpperCase();
+
                   return (
-                    <tr key={booking.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={booking.id} className="hover:bg-[#F8FAFC] transition-colors group">
                       {/* Guest Column */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-white">{booking.guest_name}</span>
-                          {isPending && (
-                            <span className="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] uppercase font-bold tracking-wider">
-                              New Request
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-400">{booking.guest_email}</div>
-                        <div className="font-mono text-[10px] text-hotel-gold mt-0.5">
-                          {booking.booking_reference}
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-[#EBF4FF] text-[#1D4ED8] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            {initials}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-[#1E2538] group-hover:text-[#135846] transition-colors">
+                                {booking.guest_name}
+                              </span>
+                              {isPending && (
+                                <span className="px-1.5 py-0.5 rounded bg-[#FFF8E6] text-[#D97706] text-[9px] uppercase font-bold tracking-wider">
+                                  New
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-[#818E9B]">{booking.guest_email}</div>
+                            <div className="font-mono text-[11px] text-[#FE5757] font-semibold mt-0.5">
+                              {booking.booking_reference}
+                            </div>
+                          </div>
                         </div>
                       </td>
 
                       {/* Room Column */}
                       <td className="py-4 px-4">
-                        <div className="text-white font-medium flex items-center gap-1.5">
-                          <span className="px-2 py-0.5 rounded-md bg-white/10 font-mono text-xs">
+                        <div className="text-[#1E2538] font-medium flex items-center gap-1.5">
+                          <span className="px-2 py-0.5 rounded-lg bg-[#F4F6F9] border border-[#EAEFF4] font-mono text-xs font-semibold text-[#1E2538]">
                             #{booking.room_number}
                           </span>
                           <span>{booking.room_type_name}</span>
                         </div>
-                        <div className="text-xs text-gray-500">Floor {booking.floor}</div>
+                        <div className="text-xs text-[#818E9B] mt-0.5">Floor {booking.floor}</div>
                       </td>
 
                       {/* Dates Column */}
                       <td className="py-4 px-4 text-xs">
-                        <div className="text-gray-200">
+                        <div className="text-[#1E2538] font-medium">
                           {checkInFormatted} — {formatDate(booking.check_out_date)}
                         </div>
-                        <div className="text-gray-500 flex items-center gap-1 mt-0.5">
+                        <div className="text-[#818E9B] flex items-center gap-1 mt-0.5">
                           <span>{booking.total_nights} Nights</span>
                           {isTodayArrival && (
-                            <span className="text-emerald-400 font-semibold">• Arriving Today</span>
+                            <span className="text-[#135846] font-semibold">• Arriving Today</span>
                           )}
                         </div>
                       </td>
 
                       {/* Total Amount */}
-                      <td className="py-4 px-4 font-serif font-bold text-white">
+                      <td className="py-4 px-4 font-serif font-bold text-[#1E2538]">
                         {formatCurrency(booking.total_amount)}
                       </td>
 
-                      {/* Status Badge */}
+                      {/* Status Badge (Travl Soft Pastel Pill) */}
                       <td className="py-4 px-4">
                         <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wider ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold capitalize ${
                             booking.status === 'checked_in'
-                              ? 'bg-blue-500/10 text-blue-400 border border-blue-500/30'
+                              ? 'bg-[#EBF4FF] text-[#1D4ED8]'
                               : booking.status === 'confirmed'
-                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                              ? 'bg-[#E8F8F0] text-[#135846]'
                               : booking.status === 'pending'
-                              ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 animate-pulse'
+                              ? 'bg-[#FFF8E6] text-[#D97706]'
                               : booking.status === 'checked_out'
-                              ? 'bg-purple-500/10 text-purple-400 border border-purple-500/30'
-                              : 'bg-gray-500/10 text-gray-400 border border-gray-500/30'
+                              ? 'bg-[#F1F3F6] text-[#556376]'
+                              : 'bg-[#FFEBEB] text-[#FE5757]'
                           }`}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-current" />
@@ -407,14 +428,14 @@ export default function AdminDashboardPage() {
                       </td>
 
                       {/* Actions Buttons */}
-                      <td className="py-4 px-4 text-right">
+                      <td className="py-4 px-6 text-right">
                         <div className="inline-flex items-center gap-1.5">
                           {isPending && (
                             <>
                               <button
                                 onClick={() => statusMutation.mutate({ bookingId: booking.id, status: 'confirmed' })}
                                 disabled={statusMutation.isPending}
-                                className="px-2.5 py-1.5 rounded-xl bg-hotel-gold text-hotel-dark font-bold text-xs uppercase tracking-wider hover:bg-hotel-gold/90 disabled:opacity-50 transition-all flex items-center gap-1"
+                                className="px-3 py-1.5 rounded-xl bg-[#135846] hover:bg-[#0e4335] text-white font-semibold text-xs shadow-sm disabled:opacity-50 transition-all flex items-center gap-1"
                                 title="Confirm this reservation"
                               >
                                 <Check className="w-3.5 h-3.5" />
@@ -423,7 +444,7 @@ export default function AdminDashboardPage() {
                               <button
                                 onClick={() => statusMutation.mutate({ bookingId: booking.id, status: 'checked_in' })}
                                 disabled={statusMutation.isPending}
-                                className="px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] disabled:opacity-50 transition-all flex items-center gap-1"
+                                className="px-3 py-1.5 rounded-xl bg-[#4A85F6] hover:bg-[#3b72db] text-white font-semibold text-xs shadow-sm disabled:opacity-50 transition-all flex items-center gap-1"
                                 title="Check In guest now"
                               >
                                 <LogIn className="w-3.5 h-3.5" />
@@ -436,7 +457,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => statusMutation.mutate({ bookingId: booking.id, status: 'checked_in' })}
                               disabled={statusMutation.isPending}
-                              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] disabled:opacity-50 transition-all flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-xl bg-[#4A85F6] hover:bg-[#3b72db] text-white font-semibold text-xs shadow-sm disabled:opacity-50 transition-all flex items-center gap-1"
                             >
                               <LogIn className="w-3.5 h-3.5" />
                               <span>Check In</span>
@@ -447,7 +468,7 @@ export default function AdminDashboardPage() {
                             <button
                               onClick={() => statusMutation.mutate({ bookingId: booking.id, status: 'checked_out' })}
                               disabled={statusMutation.isPending}
-                              className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_15px_rgba(168,85,247,0.4)] disabled:opacity-50 transition-all flex items-center gap-1"
+                              className="px-3 py-1.5 rounded-xl bg-[#FE5757] hover:bg-[#e04545] text-white font-semibold text-xs shadow-sm disabled:opacity-50 transition-all flex items-center gap-1"
                             >
                               <LogOut className="w-3.5 h-3.5" />
                               <span>Check Out</span>
@@ -462,7 +483,7 @@ export default function AdminDashboardPage() {
                                 }
                               }}
                               disabled={statusMutation.isPending}
-                              className="px-2.5 py-1.5 rounded-xl border border-white/10 text-gray-400 hover:text-red-400 hover:border-red-500/40 text-xs transition-colors"
+                              className="px-2.5 py-1.5 rounded-xl border border-[#FE5757]/30 text-[#FE5757] hover:bg-[#FFEBEB] text-xs font-medium transition-colors"
                               title="Cancel Reservation"
                             >
                               Cancel
