@@ -1,4 +1,5 @@
 import nodemailer, { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 import { env } from '../config/env';
 
 /**
@@ -21,14 +22,28 @@ export interface BookingEmailData {
 }
 
 class EmailService {
+  private resendClient: Resend | null = null;
   private transporter: Transporter | null = null;
   private isConfigured: boolean = false;
+  private provider: 'resend' | 'smtp' | 'none' = 'none';
 
   constructor() {
-    this.initTransporter();
+    this.initProviders();
   }
 
-  private initTransporter(): void {
+  private initProviders(): void {
+    if (env.RESEND_API_KEY) {
+      try {
+        this.resendClient = new Resend(env.RESEND_API_KEY);
+        this.isConfigured = true;
+        this.provider = 'resend';
+        console.log('[EmailService] Resend SDK initialized as primary delivery provider.');
+        return;
+      } catch (err) {
+        console.warn('[EmailService] Failed to initialize Resend client:', err);
+      }
+    }
+
     if (env.SMTP_USER && env.SMTP_PASS) {
       try {
         this.transporter = nodemailer.createTransport({
@@ -44,21 +59,25 @@ class EmailService {
           },
         });
         this.isConfigured = true;
+        this.provider = 'smtp';
         console.log(`[EmailService] SMTP transporter configured for ${env.SMTP_USER} via ${env.SMTP_HOST}:${env.SMTP_PORT}`);
+        return;
       } catch (err) {
         console.warn('[EmailService] Failed to initialize SMTP transporter:', err);
-        this.transporter = null;
-        this.isConfigured = false;
       }
-    } else {
-      this.isConfigured = false;
-      console.log('[EmailService] SMTP credentials not provided (SMTP_USER/SMTP_PASS). Running in simulation/log mode.');
     }
+
+    this.isConfigured = false;
+    this.provider = 'none';
+    console.log('[EmailService] Neither RESEND_API_KEY nor SMTP credentials provided. Running in simulation mode.');
   }
 
   public getStatus() {
     return {
       configured: this.isConfigured,
+      provider: this.provider,
+      hasResendApiKey: Boolean(env.RESEND_API_KEY),
+      resendKeyPrefix: env.RESEND_API_KEY ? `${env.RESEND_API_KEY.slice(0, 5)}***` : null,
       host: env.SMTP_HOST,
       port: env.SMTP_PORT,
       user: env.SMTP_USER ? `${env.SMTP_USER.slice(0, 3)}***@${env.SMTP_USER.split('@')[1] || ''}` : 'Not Set',
@@ -247,31 +266,60 @@ class EmailService {
    * Internal generic mail dispatcher
    */
   private async sendMail(options: { to: string; subject: string; html: string; text: string }): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    if (!this.isConfigured) {
       console.log(`\n================== [EMAIL SIMULATION LOG] ==================`);
       console.log(`To      : ${options.to}`);
       console.log(`From    : ${env.SMTP_FROM}`);
       console.log(`Subject : ${options.subject}`);
-      console.log(`Status  : Skipped real delivery (Set SMTP_USER and SMTP_PASS in environment to send real emails)`);
+      console.log(`Status  : Skipped real delivery (Set RESEND_API_KEY in apps/api/.env or Render to send live emails)`);
       console.log(`============================================================\n`);
       return false;
     }
 
-    try {
-      const info = await this.transporter.sendMail({
-        from: env.SMTP_FROM,
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-      });
+    // 1. Primary: Resend Official SDK
+    if (this.provider === 'resend' && this.resendClient) {
+      try {
+        const { data, error } = await this.resendClient.emails.send({
+          from: env.SMTP_FROM,
+          to: [options.to],
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+        });
 
-      console.log(`[EmailService] Email successfully sent to ${options.to}. MessageId: ${info.messageId}`);
-      return true;
-    } catch (err: any) {
-      console.error(`[EmailService] Failed to send email to ${options.to}:`, err.message);
-      return false;
+        if (error) {
+          console.error('[EmailService - Resend Error]:', error);
+          return false;
+        }
+
+        console.log(`[EmailService - Resend] Successfully delivered to ${options.to}. Email ID: ${data?.id}`);
+        return true;
+      } catch (err: any) {
+        console.error(`[EmailService - Resend Exception]:`, err.message);
+        return false;
+      }
     }
+
+    // 2. Secondary: SMTP Transporter (Nodemailer)
+    if (this.provider === 'smtp' && this.transporter) {
+      try {
+        const info = await this.transporter.sendMail({
+          from: env.SMTP_FROM,
+          to: options.to,
+          subject: options.subject,
+          text: options.text,
+          html: options.html,
+        });
+
+        console.log(`[EmailService - SMTP] Email successfully sent to ${options.to}. MessageId: ${info.messageId}`);
+        return true;
+      } catch (err: any) {
+        console.error(`[EmailService - SMTP] Failed to send email to ${options.to}:`, err.message);
+        return false;
+      }
+    }
+
+    return false;
   }
 }
 

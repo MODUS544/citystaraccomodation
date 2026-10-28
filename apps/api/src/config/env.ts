@@ -46,8 +46,9 @@ const envSchema = z.object({
   DB_POOL_IDLE_TIMEOUT_MS: z.coerce.number().default(30000),
   DB_POOL_CONNECTION_TIMEOUT_MS: z.coerce.number().default(5000),
 
-  // Email & SMTP Notification Parameters
-  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  // Resend & SMTP Notification Parameters
+  RESEND_API_KEY: z.string().optional(),
+  SMTP_HOST: z.string().default('smtp.resend.com'),
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_SECURE: z.preprocess(
     (val) => val === 'true' || val === true || val === '1' || val === undefined,
@@ -55,7 +56,7 @@ const envSchema = z.object({
   ),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  SMTP_FROM: z.string().default('"City Star Hotel & Suites" <citystarmaiduguri@gmail.com>'),
+  SMTP_FROM: z.string().default('"City Star Hotel & Suites" <onboarding@resend.dev>'),
   ADMIN_NOTIFICATION_EMAIL: z.string().default('talbashtech@gmail.com'),
 });
 

@@ -17,12 +17,17 @@ export interface BookingEmailData {
     specialRequests?: string | null;
 }
 declare class EmailService {
+    private resendClient;
     private transporter;
     private isConfigured;
+    private provider;
     constructor();
-    private initTransporter;
+    private initProviders;
     getStatus(): {
         configured: boolean;
+        provider: "resend" | "smtp" | "none";
+        hasResendApiKey: boolean;
+        resendKeyPrefix: string | null;
         host: string;
         port: number;
         user: string;

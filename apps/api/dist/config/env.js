@@ -38,13 +38,14 @@ const envSchema = zod_1.z.object({
     DB_POOL_MAX: zod_1.z.coerce.number().default(10),
     DB_POOL_IDLE_TIMEOUT_MS: zod_1.z.coerce.number().default(30000),
     DB_POOL_CONNECTION_TIMEOUT_MS: zod_1.z.coerce.number().default(5000),
-    // Email & SMTP Notification Parameters
-    SMTP_HOST: zod_1.z.string().default('smtp.gmail.com'),
+    // Resend & SMTP Notification Parameters
+    RESEND_API_KEY: zod_1.z.string().optional(),
+    SMTP_HOST: zod_1.z.string().default('smtp.resend.com'),
     SMTP_PORT: zod_1.z.coerce.number().default(465),
     SMTP_SECURE: zod_1.z.preprocess((val) => val === 'true' || val === true || val === '1' || val === undefined, zod_1.z.boolean().default(true)),
     SMTP_USER: zod_1.z.string().optional(),
     SMTP_PASS: zod_1.z.string().optional(),
-    SMTP_FROM: zod_1.z.string().default('"City Star Hotel & Suites" <citystarmaiduguri@gmail.com>'),
+    SMTP_FROM: zod_1.z.string().default('"City Star Hotel & Suites" <onboarding@resend.dev>'),
     ADMIN_NOTIFICATION_EMAIL: zod_1.z.string().default('talbashtech@gmail.com'),
 });
 function parseEnv() {
