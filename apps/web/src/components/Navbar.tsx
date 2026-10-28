@@ -79,16 +79,10 @@ export function Navbar() {
             Suites & Rooms
           </Link>
           <Link
-            href="/#amenities"
-            className="text-gray-300 hover:text-hotel-gold transition-colors whitespace-nowrap"
-          >
-            Amenities
-          </Link>
-          <Link
             href="/#experience"
             className="text-gray-300 hover:text-hotel-gold transition-colors whitespace-nowrap"
           >
-            Experience
+            The Experience
           </Link>
           <Link
             href="/my-bookings"
@@ -141,18 +135,11 @@ export function Navbar() {
             Suites & Rooms
           </Link>
           <Link
-            href="/#amenities"
-            onClick={() => setIsMobileMenuOpen(false)}
-            className="block text-gray-200 hover:text-hotel-gold font-medium text-base py-1"
-          >
-            Amenities
-          </Link>
-          <Link
             href="/#experience"
             onClick={() => setIsMobileMenuOpen(false)}
             className="block text-gray-200 hover:text-hotel-gold font-medium text-base py-1"
           >
-            Experience
+            The Experience
           </Link>
           <Link
             href="/my-bookings"

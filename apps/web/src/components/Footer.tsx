@@ -76,13 +76,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#amenities" className="hover:text-white transition-colors">
-                  Rooftop Pool & Wellness Spa
-                </Link>
-              </li>
-              <li>
                 <Link href="/#experience" className="hover:text-white transition-colors">
-                  Al-Maida Royal Dining
+                  The Heritage Experience
                 </Link>
               </li>
               <li>
