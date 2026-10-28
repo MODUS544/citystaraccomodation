@@ -50,35 +50,51 @@ bookingsRouter.post(
         const name = guestName || email.split('@')[0];
         const phone = guestPhone || null;
 
-        // Check if profile exists for this email
-        const existingProf = await client.query('SELECT id FROM public.profiles WHERE email = $1 LIMIT 1', [email]);
-        if (existingProf.rows.length > 0) {
-          guestId = existingProf.rows[0].id;
-        } else {
-          // Provision a new guest account in auth.users and public.profiles
-          const newUserIdRes = await client.query('SELECT gen_random_uuid() AS id;');
-          const newUserId = newUserIdRes.rows[0].id;
-
-          await client.query(`
-            INSERT INTO auth.users (
-              instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-              raw_app_meta_data, raw_user_meta_data, created_at, updated_at
-            ) VALUES (
-              '00000000-0000-0000-0000-000000000000', $1::uuid, 'authenticated', 'authenticated',
-              $2::text, crypt('GuestPass2026!', gen_salt('bf')), now(),
-              jsonb_build_object('provider', 'email', 'providers', array['email']),
-              jsonb_build_object('full_name', $3::text, 'phone_number', $4::text),
-              now(), now()
-            );
-          `, [newUserId, email, name, phone]);
-
+        // Check if user already exists in auth.users or profiles
+        const existingAuthUser = await client.query('SELECT id FROM auth.users WHERE lower(email) = lower($1) LIMIT 1', [email]);
+        if (existingAuthUser.rows.length > 0) {
+          guestId = existingAuthUser.rows[0].id;
           await client.query(`
             INSERT INTO public.profiles (id, email, full_name, phone_number, role, created_at, updated_at)
-            VALUES ($1::uuid, $2::text, $3::text, $4::text, 'guest', now(), now())
-            ON CONFLICT (id) DO UPDATE SET full_name = EXCLUDED.full_name, phone_number = EXCLUDED.phone_number;
-          `, [newUserId, email, name, phone]);
+            VALUES ($1::uuid, $2::text, $3::text, $4::text, 'customer', now(), now())
+            ON CONFLICT (id) DO UPDATE SET 
+              full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name),
+              phone_number = COALESCE(EXCLUDED.phone_number, public.profiles.phone_number),
+              updated_at = now();
+          `, [guestId, email, name, phone]);
+        } else {
+          const existingProf = await client.query('SELECT id FROM public.profiles WHERE lower(email) = lower($1) LIMIT 1', [email]);
+          if (existingProf.rows.length > 0) {
+            guestId = existingProf.rows[0].id;
+          } else {
+            // Provision a new guest account in auth.users and public.profiles
+            const newUserIdRes = await client.query('SELECT gen_random_uuid() AS id;');
+            const newUserId = newUserIdRes.rows[0].id;
 
-          guestId = newUserId;
+            await client.query(`
+              INSERT INTO auth.users (
+                instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+                raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+              ) VALUES (
+                '00000000-0000-0000-0000-000000000000', $1::uuid, 'authenticated', 'authenticated',
+                $2::text, crypt('GuestPass2026!', gen_salt('bf')), now(),
+                jsonb_build_object('provider', 'email', 'providers', array['email']),
+                jsonb_build_object('full_name', $3::text, 'phone_number', $4::text),
+                now(), now()
+              );
+            `, [newUserId, email, name, phone]);
+
+            await client.query(`
+              INSERT INTO public.profiles (id, email, full_name, phone_number, role, created_at, updated_at)
+              VALUES ($1::uuid, $2::text, $3::text, $4::text, 'customer', now(), now())
+              ON CONFLICT (id) DO UPDATE SET 
+                full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name),
+                phone_number = COALESCE(EXCLUDED.phone_number, public.profiles.phone_number),
+                updated_at = now();
+            `, [newUserId, email, name, phone]);
+
+            guestId = newUserId;
+          }
         }
       }
 
@@ -220,25 +236,29 @@ bookingsRouter.get(
         SELECT 
           b.id,
           b.booking_reference,
+          COALESCE(b.booking_code, b.booking_reference) AS booking_code,
           b.guest_id,
           b.check_in_date,
           b.check_out_date,
           b.total_nights,
           b.total_amount,
           b.status,
+          COALESCE(b.payment_status, 'unpaid') AS payment_status,
           b.special_requests,
           b.created_at,
           r.room_number,
           r.floor,
           rt.name AS room_type_name,
-          p.full_name AS guest_name,
-          p.email AS guest_email,
-          p.phone_number AS guest_phone
+          COALESCE(b.guest_name, p.full_name, wig.full_name, 'Valued Guest') AS guest_name,
+          COALESCE(b.guest_email, p.email, wig.email, '') AS guest_email,
+          COALESCE(b.guest_phone, p.phone_number, wig.phone_number, '') AS guest_phone
         FROM public.bookings b
-        JOIN public.profiles p ON b.guest_id = p.id
+        LEFT JOIN public.profiles p ON b.guest_id = p.id
+        LEFT JOIN public.walk_in_guests wig ON b.walk_in_guest_id = wig.id
         JOIN public.rooms r ON b.room_id = r.id
         JOIN public.room_types rt ON r.room_type_id = rt.id
         WHERE UPPER(TRIM(b.booking_reference)) = UPPER(TRIM($1))
+           OR UPPER(TRIM(COALESCE(b.booking_code, ''))) = UPPER(TRIM($1))
         LIMIT 1
       `;
       const result = await dbPool.query(query, [reference]);

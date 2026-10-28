@@ -166,23 +166,27 @@ exports.frontdeskRouter.post('/walk-in', (0, validate_middleware_1.validateReque
         }
         const bookingReference = `CH.${refLetters}`;
         const initialStatus = autoCheckIn ? 'checked_in' : 'confirmed';
-        // 5. Insert Booking Record
+        // 5. Insert Booking Record (total_nights is a generated column, so omit it)
         const insertBookingQuery = `
         INSERT INTO public.bookings (
           booking_reference,
+          booking_code,
           walk_in_guest_id,
           booked_by_staff_id,
           room_id,
           check_in_date,
           check_out_date,
-          total_nights,
           total_amount,
           status,
+          payment_status,
           payment_method,
           special_requests,
+          guest_name,
+          guest_phone,
+          guest_email,
           created_at,
           updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+        ) VALUES ($1::text, $1::varchar, $2, $3, $4, $5, $6, $7, $8, 'paid_at_desk'::payment_status, $9, $10, $11, $12, $13, NOW(), NOW())
         RETURNING *;
       `;
         const bookingResult = await client.query(insertBookingQuery, [
@@ -192,11 +196,13 @@ exports.frontdeskRouter.post('/walk-in', (0, validate_middleware_1.validateReque
             room.id,
             checkInDate,
             checkOutDate,
-            totalNights,
             totalAmount,
             initialStatus,
             paymentMethod,
             specialRequests || null,
+            fullName,
+            phoneNumber,
+            email || null,
         ]);
         const createdBooking = bookingResult.rows[0];
         // 6. Update physical room status if auto check-in is toggled

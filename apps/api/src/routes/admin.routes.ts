@@ -125,15 +125,16 @@ adminRouter.get('/analytics/overview', async (req: Request, res: Response, next:
         b.status,
         b.special_requests,
         b.created_at,
-        p.full_name AS guest_name,
-        p.email AS guest_email,
-        p.phone_number AS guest_phone,
+        COALESCE(b.guest_name, p.full_name, wig.full_name, 'Valued Guest') AS guest_name,
+        COALESCE(b.guest_email, p.email, wig.email, '') AS guest_email,
+        COALESCE(b.guest_phone, p.phone_number, wig.phone_number, '') AS guest_phone,
         r.id AS room_id,
         r.room_number,
         r.floor,
         rt.name AS room_type_name
       FROM public.bookings b
-      JOIN public.profiles p ON b.guest_id = p.id
+      LEFT JOIN public.profiles p ON b.guest_id = p.id
+      LEFT JOIN public.walk_in_guests wig ON b.walk_in_guest_id = wig.id
       JOIN public.rooms r ON b.room_id = r.id
       JOIN public.room_types rt ON r.room_type_id = rt.id
       WHERE b.status IN ('pending', 'confirmed', 'checked_in')
@@ -213,7 +214,9 @@ adminRouter.get(
         conditions.push(`(
           b.booking_reference ILIKE $${paramIndex} OR
           b.booking_code ILIKE $${paramIndex} OR
+          b.guest_name ILIKE $${paramIndex} OR
           p.full_name ILIKE $${paramIndex} OR
+          wig.full_name ILIKE $${paramIndex} OR
           p.email ILIKE $${paramIndex} OR
           r.room_number ILIKE $${paramIndex}
         )`);
@@ -237,17 +240,18 @@ adminRouter.get(
           COALESCE(b.payment_status, 'unpaid') AS payment_status,
           b.special_requests,
           b.created_at,
-          p.id AS guest_id,
-          COALESCE(b.guest_name, p.full_name, 'Valued Guest') AS guest_name,
-          COALESCE(b.guest_email, p.email, '') AS guest_email,
-          COALESCE(b.guest_phone, p.phone_number, '') AS guest_phone,
+          COALESCE(b.guest_id, b.walk_in_guest_id) AS guest_id,
+          COALESCE(b.guest_name, p.full_name, wig.full_name, 'Valued Guest') AS guest_name,
+          COALESCE(b.guest_email, p.email, wig.email, '') AS guest_email,
+          COALESCE(b.guest_phone, p.phone_number, wig.phone_number, '') AS guest_phone,
           r.id AS room_id,
           r.room_number,
           r.floor,
           rt.name AS room_type_name,
           COUNT(*) OVER() AS full_count
         FROM public.bookings b
-        JOIN public.profiles p ON b.guest_id = p.id
+        LEFT JOIN public.profiles p ON b.guest_id = p.id
+        LEFT JOIN public.walk_in_guests wig ON b.walk_in_guest_id = wig.id
         JOIN public.rooms r ON b.room_id = r.id
         JOIN public.room_types rt ON r.room_type_id = rt.id
         WHERE ${whereClause}
