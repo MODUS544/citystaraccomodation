@@ -14,7 +14,12 @@ export function middleware(request: NextRequest) {
   const isStaff = isAuthenticated && (staffRole === 'staff' || staffRole === 'receptionist');
   const isStaffOrAdmin = isSuperAdmin || isStaff;
 
-  // 1. Protect /admin routes: Exclusive to Super Admin
+  // Redirect bare /staff to /staff/dashboard
+  if (pathname === '/staff' || pathname === '/staff/') {
+    return NextResponse.redirect(new URL('/staff/dashboard', request.url));
+  }
+
+  // 1. Protect /admin routes
   if (pathname.startsWith('/admin')) {
     if (!isAuthenticated) {
       const loginUrl = new URL('/login', request.url);
@@ -22,8 +27,14 @@ export function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // If staff attempts to enter Super Admin command center, redirect to Staff Dashboard
-    if (!isSuperAdmin) {
+    // Executive Analytics and Brand CMS are restricted to Super Admin
+    const isExecutiveRoute =
+      pathname === '/admin/dashboard' ||
+      pathname.startsWith('/admin/dashboard/') ||
+      pathname === '/admin/branding' ||
+      pathname.startsWith('/admin/branding/');
+
+    if (isExecutiveRoute && !isSuperAdmin) {
       return NextResponse.redirect(new URL('/staff/dashboard', request.url));
     }
   }

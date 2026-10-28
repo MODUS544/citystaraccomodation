@@ -82,9 +82,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               localStorage.setItem('citystar_auth_token', fallbackToken);
             }
           } else if (role === 'staff' || role === 'receptionist') {
-            setIsLoadingAuth(false);
-            router.replace('/frontdesk/walk-in');
-            return;
+            hasStaffAuth = true;
+            activeEmail = email;
+            activeRole = 'staff';
+            localStorage.setItem('citystar_staff_email', activeEmail);
+            localStorage.setItem('citystar_staff_role', 'staff');
+            if (pathname === '/admin/dashboard' || pathname === '/admin/branding') {
+              setIsLoadingAuth(false);
+              router.replace('/staff/dashboard');
+              return;
+            }
           }
         }
 
@@ -135,7 +142,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9] text-[#1E2538] flex flex-col md:flex-row relative">
+    <div className="h-screen max-h-screen bg-[#F4F6F9] text-[#1E2538] flex flex-col md:flex-row overflow-hidden relative selection:bg-[#135846] selection:text-white">
       {/* Floating Settings Widgets (from reference image) */}
       <div className="fixed right-0 top-1/2 -translate-y-10 z-40 flex flex-col gap-1.5 no-print">
         <button
@@ -160,7 +167,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside
         className={`${
           isMobileMenuOpen ? 'fixed inset-0 z-50 bg-white' : 'hidden'
-        } md:flex flex-col w-full md:w-64 bg-white border-r border-[#EAEFF4] flex-shrink-0 z-30 transition-all shadow-[2px_0_20px_rgba(0,0,0,0.02)]`}
+        } md:flex flex-col w-full md:w-64 bg-white border-r border-[#EAEFF4] flex-shrink-0 z-30 h-screen overflow-y-auto transition-all shadow-[2px_0_20px_rgba(0,0,0,0.02)]`}
       >
         {/* Brand Header */}
         <div className="flex items-center justify-between p-6 border-b border-[#EAEFF4]">
@@ -287,9 +294,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Main Body Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col h-screen overflow-hidden min-w-0">
         {/* Top Header Bar (matches Travl header from reference) */}
-        <header className="sticky top-0 z-20 bg-white border-b border-[#EAEFF4] px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+        <header className="flex-shrink-0 bg-white border-b border-[#EAEFF4] px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] z-20">
           {/* Left: Mobile Toggle & Page Title */}
           <div className="flex items-center gap-3">
             <button
@@ -385,9 +392,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
         </header>
 
-        {/* Main Content View Canvas */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 animate-fade-slide-up">
-          {children}
+        {/* Main Content View Canvas with Internal Scroll */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth animate-fade-slide-up">
+          <div className="max-w-7xl mx-auto space-y-8 pb-20">{children}</div>
         </main>
       </div>
     </div>

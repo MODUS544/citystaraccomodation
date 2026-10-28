@@ -31,12 +31,14 @@ export function Navbar() {
   }, []);
 
   // Do not render guest navbar on staff or admin portal routes to avoid header collisions
-  const isPortalRoute =
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/staff') ||
-    pathname.startsWith('/frontdesk');
+  const isPortalRoute = Boolean(
+    pathname &&
+    (pathname.startsWith('/admin') ||
+     pathname.startsWith('/staff') ||
+     pathname.startsWith('/frontdesk'))
+  );
 
-  if (isPortalRoute) return null;
+  if (!pathname || isPortalRoute) return null;
 
   return (
     <header

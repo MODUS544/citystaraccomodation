@@ -18,12 +18,15 @@ import {
   Shield,
   Clock,
   Sparkles,
+  LayoutDashboard,
+  ExternalLink,
 } from 'lucide-react';
 
 const STAFF_NAV_ITEMS = [
-  { name: 'Operations & Queue', href: '/staff/dashboard', icon: CalendarCheck2 },
+  { name: 'Dashboard Overview', href: '/staff/dashboard', icon: LayoutDashboard },
   { name: 'Express Walk-In', href: '/frontdesk/walk-in', icon: DoorOpen },
   { name: 'Room Inventory', href: '/admin/inventory', icon: BedDouble },
+  { name: 'Guest Registry', href: '/admin/bookings', icon: Users },
 ];
 
 export default function StaffLayout({ children }: { children: React.ReactNode }) {
@@ -57,19 +60,20 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="min-h-screen bg-[#F4F6F9] text-[#1E2538] flex flex-col antialiased selection:bg-[#135846] selection:text-white">
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-[#EAEFF4] shadow-[0_2px_12px_rgba(0,0,0,0.03)] px-6 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="h-screen max-h-screen bg-[#F4F6F9] text-[#1E2538] flex flex-col overflow-hidden antialiased selection:bg-[#135846] selection:text-white">
+      {/* Top Header Bar - Fixed Flex Child at Top */}
+      <header className="flex-shrink-0 bg-white border-b border-[#EAEFF4] shadow-[0_2px_12px_rgba(0,0,0,0.03)] px-4 sm:px-6 py-3.5 flex items-center justify-between z-30">
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100"
+            className="md:hidden p-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+            aria-label="Toggle Navigation Menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <Link href="/staff/dashboard" className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#135846] flex items-center justify-center text-white font-serif font-bold text-lg shadow-sm">
+          <Link href="/staff/dashboard" className="flex items-center gap-3 group">
+            <div className="w-10 h-10 rounded-xl bg-[#135846] flex items-center justify-center text-white font-serif font-bold text-base shadow-sm group-hover:scale-105 transition-transform">
               CS
             </div>
             <div>
@@ -77,14 +81,14 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                 CITY STAR HOTEL
               </div>
               <div className="text-[10px] uppercase tracking-wider text-[#135846] font-bold">
-                Front Desk & Staff Portal
+                Front Desk & Operations Portal
               </div>
             </div>
           </Link>
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8F8F0] text-[#135846] text-xs font-semibold">
             <span className="w-2 h-2 rounded-full bg-[#135846] animate-pulse" />
             <span>Front Desk Live</span>
@@ -106,10 +110,51 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      {/* Main Layout Container */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Mobile Navigation Drawer */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white border-b border-[#EAEFF4] px-4 py-4 space-y-2 z-40 animate-in slide-in-from-top-2 duration-200">
+          <div className="text-[10px] uppercase tracking-wider text-[#818E9B] font-bold px-3 mb-1">
+            Navigation Menu
+          </div>
+          {STAFF_NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                  isActive
+                    ? 'bg-[#135846] text-white shadow-sm'
+                    : 'text-[#556376] hover:text-[#1E2538] hover:bg-[#F4F6F9]'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.name}</span>
+              </Link>
+            );
+          })}
+          <div className="pt-2 border-t border-[#EAEFF4]">
+            <Link
+              href="/"
+              target="_blank"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex items-center justify-between px-3.5 py-2 text-xs text-[#818E9B] hover:text-[#1E2538]"
+            >
+              <span className="flex items-center gap-2">
+                <ExternalLink className="w-3.5 h-3.5" />
+                Guest Website
+              </span>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Main Layout Area - Sidebar + Internal Scroll Container */}
+      <div className="flex-1 flex overflow-hidden min-h-0">
         {/* Desktop Sidebar */}
-        <aside className="w-64 bg-white border-r border-[#EAEFF4] p-5 hidden md:flex flex-col justify-between">
+        <aside className="w-64 bg-white border-r border-[#EAEFF4] p-5 hidden md:flex flex-col justify-between flex-shrink-0 overflow-y-auto">
           <div className="space-y-6">
             <div className="text-xs uppercase tracking-wider text-[#818E9B] font-bold px-3">
               Operations Center
@@ -124,7 +169,7 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
                     href={item.href}
                     className={`flex items-center gap-3 px-3.5 py-3 rounded-2xl text-xs font-semibold transition-all ${
                       isActive
-                        ? 'bg-[#135846] text-white shadow-sm'
+                        ? 'bg-[#135846] text-white shadow-sm font-bold'
                         : 'text-[#556376] hover:text-[#1E2538] hover:bg-[#F4F6F9]'
                     }`}
                   >
@@ -136,22 +181,36 @@ export default function StaffLayout({ children }: { children: React.ReactNode })
             </nav>
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#EAEFF4] text-xs space-y-2">
-            <div className="flex items-center gap-2 text-[#135846] font-bold">
-              <Shield className="w-4 h-4" />
-              <span>5-Star Hospitality</span>
+          <div className="space-y-3">
+            <div className="p-4 rounded-2xl bg-[#F8FAFC] border border-[#EAEFF4] text-xs space-y-2">
+              <div className="flex items-center gap-2 text-[#135846] font-bold">
+                <Shield className="w-4 h-4" />
+                <span>5-Star Hospitality</span>
+              </div>
+              <p className="text-[11px] text-[#818E9B] leading-relaxed">
+                Verify guest booking code upon arrival, process check-ins, or record counter cash/POS payment.
+              </p>
             </div>
-            <p className="text-[11px] text-[#818E9B] leading-relaxed">
-              Verify guest booking code upon mobile arrival, or record desk cash/POS payment.
-            </p>
+
+            <Link
+              href="/"
+              target="_blank"
+              className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium text-gray-500 hover:text-[#1E2538] hover:bg-gray-50 transition-colors"
+            >
+              <span className="flex items-center gap-2">
+                <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+                Guest Website
+              </span>
+            </Link>
           </div>
         </aside>
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
-          <div className="max-w-7xl mx-auto">{children}</div>
+        {/* Page Content - Dedicated Internal Scroll Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth">
+          <div className="max-w-7xl mx-auto space-y-6 pb-20">{children}</div>
         </main>
       </div>
     </div>
   );
 }
+

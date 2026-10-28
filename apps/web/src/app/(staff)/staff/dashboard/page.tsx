@@ -20,9 +20,14 @@ import {
   Phone,
   Mail,
   DoorOpen,
+  Bed,
+  DollarSign,
+  ArrowUpRight,
+  TrendingUp,
 } from 'lucide-react';
 import {
   fetchAdminBookings,
+  fetchAdminOverview,
   updateBookingStatus,
   markBookingPaidAtDesk,
   AdminActionBooking,
@@ -41,6 +46,18 @@ export default function StaffDashboardPage() {
   const [selectedFolio, setSelectedFolio] = useState<AdminActionBooking | null>(null);
   const [printingReceipt, setPrintingReceipt] = useState<AdminActionBooking | null>(null);
 
+  // 1. Dashboard Overview KPI Metrics
+  const {
+    data: overview,
+    isLoading: isLoadingOverview,
+    refetch: refetchOverview,
+    isFetching: isFetchingOverview,
+  } = useQuery({
+    queryKey: ['admin-overview'],
+    queryFn: () => fetchAdminOverview(),
+  });
+
+  // 2. Real-time Bookings & Queue Data
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ['staff-bookings', page, status, search],
     queryFn: () =>
@@ -51,6 +68,11 @@ export default function StaffDashboardPage() {
         search: search.trim() || undefined,
       }),
   });
+
+  const handleRefreshAll = () => {
+    refetch();
+    refetchOverview();
+  };
 
   const statusMutation = useMutation({
     mutationFn: ({
@@ -69,6 +91,7 @@ export default function StaffDashboardPage() {
           : 'Reservation status updated.';
       setNotification({ type: 'success', message: msg });
       queryClient.invalidateQueries({ queryKey: ['staff-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-overview'] });
       setTimeout(() => setNotification(null), 4000);
     },
     onError: (err: any) => {
@@ -85,6 +108,7 @@ export default function StaffDashboardPage() {
         message: 'Payment recorded as "Paid at Desk". Reservation marked Confirmed.',
       });
       queryClient.invalidateQueries({ queryKey: ['staff-bookings'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-overview'] });
       setTimeout(() => setNotification(null), 4000);
     },
     onError: (err: any) => {
@@ -95,31 +119,141 @@ export default function StaffDashboardPage() {
 
   const bookings = data?.bookings || [];
   const pagination = data?.pagination;
+  const isRefreshing = isFetching || isFetchingOverview;
 
   return (
-    <div className="space-y-6 animate-fade-slide-up">
+    <div className="space-y-8 animate-fade-slide-up">
       {/* Page Title & Realtime Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs uppercase tracking-[0.2em] text-[#135846] font-bold block mb-1">
-            Front Desk Operations
+            Dashboard Overview
           </span>
-          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1E2538]">
-            Guest Queue & Room Releases
+          <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#1E2538] tracking-tight">
+            Hotel Operations & Front Desk Queue
           </h1>
           <p className="text-[#818E9B] text-xs sm:text-sm mt-0.5">
-            Monitor arrivals, process check-ins, record counter payments, and release room inventory.
+            Live occupancy metrics, VIP check-ins, counter payment recording, and room release management.
           </p>
         </div>
 
         <button
-          onClick={() => refetch()}
-          disabled={isFetching}
+          onClick={handleRefreshAll}
+          disabled={isRefreshing}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-[#EAEFF4] text-xs font-semibold text-[#556376] hover:text-[#1E2538] shadow-sm hover:shadow transition-all self-start sm:self-auto"
         >
-          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin text-[#135846]' : 'text-[#818E9B]'}`} />
-          <span>Refresh Queue</span>
+          <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#135846]' : 'text-[#818E9B]'}`} />
+          <span>Refresh Live Data</span>
         </button>
+      </div>
+
+      {/* 4-Card Dashboard Overview KPI Summary Banner (Travl Hospitality Design) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* KPI 1: Live Occupancy */}
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
+              Live Occupancy
+            </span>
+            <div className="w-11 h-11 rounded-2xl bg-[#E8F8F0] text-[#135846] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <Bed className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-3xl font-bold text-[#1E2538] font-sans">
+              {isLoadingOverview ? '...' : `${overview?.kpis?.occupancyRate || 0}%`}
+            </span>
+            <span className="text-xs text-[#818E9B] font-medium">
+              ({overview?.kpis?.occupiedRooms || 0} / {overview?.kpis?.totalRooms || 0} Rooms)
+            </span>
+          </div>
+          <div className="text-xs text-[#556376] flex items-center gap-2 mt-3 pt-3 border-t border-[#F4F6F9]">
+            <span className="inline-block w-2 h-2 rounded-full bg-[#135846] animate-pulse" />
+            <span>
+              <strong className="text-[#135846] font-semibold">{overview?.kpis?.availableRooms || 0}</strong> Available • {overview?.kpis?.maintenanceRooms || 0} Maint.
+            </span>
+          </div>
+        </div>
+
+        {/* KPI 2: Gross Revenue / Intake MTD */}
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
+              Revenue (MTD)
+            </span>
+            <div className="w-11 h-11 rounded-2xl bg-[#FFF8E6] text-[#D97706] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <DollarSign className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-2xl sm:text-3xl font-bold text-[#135846] font-serif">
+              {isLoadingOverview ? '...' : formatCurrency(overview?.kpis?.monthToDateRevenue || 0)}
+            </span>
+          </div>
+          <div className="text-xs text-[#556376] mt-3 pt-3 border-t border-[#F4F6F9] flex items-center justify-between">
+            <span className="text-[#818E9B]">YTD Total:</span>
+            <strong className="text-[#1E2538] font-semibold">
+              {formatCurrency(overview?.kpis?.yearToDateRevenue || 0)}
+            </strong>
+          </div>
+        </div>
+
+        {/* KPI 3: Today's Check-In */}
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
+              Today's Check-In
+            </span>
+            <div className="w-11 h-11 rounded-2xl bg-[#EBF4FF] text-[#1D4ED8] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <LogIn className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-3xl font-bold text-[#1E2538] font-sans">
+              {isLoadingOverview ? '...' : overview?.kpis?.checkInsToday || 0}
+            </span>
+            <span className="text-xs text-[#818E9B] font-medium">Arrivals Scheduled</span>
+          </div>
+          <div className="text-xs mt-3 pt-3 border-t border-[#F4F6F9] flex items-center gap-1.5">
+            {(overview?.kpis?.pendingBookings || 0) > 0 ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-[#FE5757] animate-pulse" />
+                <span className="text-[#FE5757] font-semibold">
+                  {overview?.kpis?.pendingBookings} Pending Payment
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-[#135846]" />
+                <span className="text-[#135846] font-medium">All Check-Ins Scheduled</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* KPI 4: Today's Check-Out */}
+        <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
+          <div className="flex items-center justify-between mb-4">
+            <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
+              Today's Check-Out
+            </span>
+            <div className="w-11 h-11 rounded-2xl bg-[#FFEBEB] text-[#FE5757] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <LogOut className="w-5 h-5" />
+            </div>
+          </div>
+          <div className="flex items-baseline gap-2 mb-1">
+            <span className="text-3xl font-bold text-[#1E2538] font-sans">
+              {isLoadingOverview ? '...' : overview?.kpis?.checkOutsToday || 0}
+            </span>
+            <span className="text-xs text-[#818E9B] font-medium">Departures Pending</span>
+          </div>
+          <div className="text-xs text-[#556376] mt-3 pt-3 border-t border-[#F4F6F9] flex items-center gap-1">
+            <Clock className="w-3.5 h-3.5 text-[#818E9B]" />
+            <span>
+              {overview?.kpis?.activeBookings || bookings.length} Total Bookings in System
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Notification Toast */}

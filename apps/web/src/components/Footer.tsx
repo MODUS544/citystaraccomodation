@@ -20,12 +20,14 @@ export function Footer() {
   const contact = siteSettings?.contact_info;
 
   // Do not render guest footer on staff or admin portal routes
-  const isPortalRoute =
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/staff') ||
-    pathname.startsWith('/frontdesk');
+  const isPortalRoute = Boolean(
+    pathname &&
+    (pathname.startsWith('/admin') ||
+     pathname.startsWith('/staff') ||
+     pathname.startsWith('/frontdesk'))
+  );
 
-  if (isPortalRoute) return null;
+  if (!pathname || isPortalRoute) return null;
 
   return (
     <footer className="bg-[#05080E] border-t border-white/10 text-white pt-16 pb-12">
