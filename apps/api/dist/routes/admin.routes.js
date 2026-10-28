@@ -8,6 +8,7 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const validate_middleware_1 = require("../middleware/validate.middleware");
 const api_response_1 = require("../utils/api-response");
 const errors_1 = require("../utils/errors");
+const email_service_1 = require("../services/email.service");
 exports.adminRouter = (0, express_1.Router)();
 // Apply staff authentication across all admin endpoints
 exports.adminRouter.use(auth_middleware_1.authenticateToken);
@@ -722,6 +723,48 @@ exports.adminRouter.put('/rooms/:id/rate', (0, auth_middleware_1.requireRole)(['
             throw new errors_1.NotFoundError(`Room with id '${id}' not found`);
         }
         res.json((0, api_response_1.successResponse)(updateRes.rows[0]));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * GET /api/v1/admin/email/status
+ * Check SMTP configuration status
+ */
+exports.adminRouter.get('/email/status', auth_middleware_1.requireSuperAdmin, async (_req, res) => {
+    res.json((0, api_response_1.successResponse)(email_service_1.emailService.getStatus()));
+});
+/**
+ * POST /api/v1/admin/email/test
+ * Send a test email to verify credentials
+ */
+exports.adminRouter.post('/email/test', auth_middleware_1.requireSuperAdmin, async (req, res, next) => {
+    try {
+        const targetEmail = req.body.targetEmail || 'talbashtech@gmail.com';
+        const success = await email_service_1.emailService.sendGuestConfirmation({
+            bookingReference: 'CH.TEST1',
+            guestName: 'City Star Management Test',
+            guestEmail: targetEmail,
+            guestPhone: '+234 800 000 0000',
+            roomName: 'Presidential Kanem Suite (Test)',
+            roomNumber: '101',
+            floor: 1,
+            checkInDate: new Date().toISOString().split('T')[0],
+            checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+            totalNights: 1,
+            totalAmount: 120000,
+            paymentStatus: 'paid_at_desk',
+            specialRequests: 'Diagnostic email test from City Star Hotel Admin System',
+        });
+        res.json((0, api_response_1.successResponse)({
+            delivered: success,
+            targetEmail,
+            status: email_service_1.emailService.getStatus(),
+            note: success
+                ? 'Email delivered successfully! Check your inbox or spam folder.'
+                : 'Email delivery was skipped because SMTP is not configured. Add SMTP_USER and SMTP_PASS to your environment to receive live emails.'
+        }));
     }
     catch (err) {
         next(err);

@@ -6,6 +6,7 @@ import { authenticateToken, requireStaffOrAdmin } from '../middleware/auth.middl
 import { validateRequest } from '../middleware/validate.middleware';
 import { successResponse } from '../utils/api-response';
 import { BadRequestError, NotFoundError, ConcurrencyDoubleBookingError } from '../utils/errors';
+import { emailService } from '../services/email.service';
 
 export const frontdeskRouter = Router();
 
@@ -269,6 +270,41 @@ frontdeskRouter.post(
       }
 
       await client.query('COMMIT');
+
+      // Dispatch async luxury confirmation emails (non-blocking)
+      if (email) {
+        emailService.sendGuestConfirmation({
+          bookingReference,
+          guestName: fullName,
+          guestEmail: email,
+          guestPhone: phoneNumber,
+          roomName: room.room_type_name,
+          roomNumber: room.room_number,
+          floor: room.floor,
+          checkInDate,
+          checkOutDate,
+          totalNights,
+          totalAmount,
+          paymentStatus: 'paid_at_desk',
+          specialRequests: specialRequests || null,
+        }).catch(e => console.warn('[EmailService] Async walk-in guest email error:', e));
+      }
+
+      emailService.sendAdminAlert({
+        bookingReference,
+        guestName: fullName,
+        guestEmail: email || 'walkin@guest.com',
+        guestPhone: phoneNumber,
+        roomName: room.room_type_name,
+        roomNumber: room.room_number,
+        floor: room.floor,
+        checkInDate,
+        checkOutDate,
+        totalNights,
+        totalAmount,
+        paymentStatus: 'paid_at_desk',
+        specialRequests: specialRequests || null,
+      }).catch(e => console.warn('[EmailService] Async walk-in admin alert error:', e));
 
       res.status(201).json(
         successResponse({

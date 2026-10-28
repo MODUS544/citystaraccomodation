@@ -8,6 +8,7 @@ const validate_middleware_1 = require("../middleware/validate.middleware");
 const auth_middleware_1 = require("../middleware/auth.middleware");
 const api_response_1 = require("../utils/api-response");
 const errors_1 = require("../utils/errors");
+const email_service_1 = require("../services/email.service");
 exports.bookingsRouter = (0, express_1.Router)();
 // Validation Schemas
 const createBookingSchema = zod_1.z.object({
@@ -149,6 +150,37 @@ exports.bookingsRouter.post('/', auth_middleware_1.optionalAuthenticate, (0, val
             guestPhone || null,
         ]);
         const newBooking = reservationResult.rows[0];
+        // Dispatch async luxury confirmation emails (non-blocking)
+        email_service_1.emailService.sendGuestConfirmation({
+            bookingReference: newBooking.booking_reference,
+            guestName: newBooking.guest_name || guestName || 'Valued Guest',
+            guestEmail: newBooking.guest_email || guestEmail || '',
+            guestPhone: newBooking.guest_phone || guestPhone || '',
+            roomName: assignedRoom.room_type_name,
+            roomNumber: assignedRoom.room_number,
+            floor: assignedRoom.floor,
+            checkInDate,
+            checkOutDate,
+            totalNights,
+            totalAmount,
+            paymentStatus: newBooking.payment_status || 'unpaid',
+            specialRequests: specialRequests || null,
+        }).catch(e => console.warn('[EmailService] Async guest confirmation error:', e));
+        email_service_1.emailService.sendAdminAlert({
+            bookingReference: newBooking.booking_reference,
+            guestName: newBooking.guest_name || guestName || 'Valued Guest',
+            guestEmail: newBooking.guest_email || guestEmail || '',
+            guestPhone: newBooking.guest_phone || guestPhone || '',
+            roomName: assignedRoom.room_type_name,
+            roomNumber: assignedRoom.room_number,
+            floor: assignedRoom.floor,
+            checkInDate,
+            checkOutDate,
+            totalNights,
+            totalAmount,
+            paymentStatus: newBooking.payment_status || 'unpaid',
+            specialRequests: specialRequests || null,
+        }).catch(e => console.warn('[EmailService] Async admin alert error:', e));
         res.status(201).json((0, api_response_1.successResponse)(newBooking));
     }
     catch (err) {

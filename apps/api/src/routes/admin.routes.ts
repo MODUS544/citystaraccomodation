@@ -5,6 +5,7 @@ import { authenticateToken, requireRole, requireSuperAdmin, requireStaffOrAdmin 
 import { validateRequest } from '../middleware/validate.middleware';
 import { successResponse } from '../utils/api-response';
 import { BadRequestError, NotFoundError } from '../utils/errors';
+import { emailService } from '../services/email.service';
 
 export const adminRouter = Router();
 
@@ -881,6 +882,58 @@ adminRouter.put(
       }
 
       res.json(successResponse(updateRes.rows[0]));
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+/**
+ * GET /api/v1/admin/email/status
+ * Check SMTP configuration status
+ */
+adminRouter.get(
+  '/email/status',
+  requireSuperAdmin,
+  async (_req: Request, res: Response) => {
+    res.json(successResponse(emailService.getStatus()));
+  }
+);
+
+/**
+ * POST /api/v1/admin/email/test
+ * Send a test email to verify credentials
+ */
+adminRouter.post(
+  '/email/test',
+  requireSuperAdmin,
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const targetEmail = req.body.targetEmail || 'talbashtech@gmail.com';
+      const success = await emailService.sendGuestConfirmation({
+        bookingReference: 'CH.TEST1',
+        guestName: 'City Star Management Test',
+        guestEmail: targetEmail,
+        guestPhone: '+234 800 000 0000',
+        roomName: 'Presidential Kanem Suite (Test)',
+        roomNumber: '101',
+        floor: 1,
+        checkInDate: new Date().toISOString().split('T')[0],
+        checkOutDate: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        totalNights: 1,
+        totalAmount: 120000,
+        paymentStatus: 'paid_at_desk',
+        specialRequests: 'Diagnostic email test from City Star Hotel Admin System',
+      });
+
+      res.json(successResponse({
+        delivered: success,
+        targetEmail,
+        status: emailService.getStatus(),
+        note: success 
+          ? 'Email delivered successfully! Check your inbox or spam folder.'
+          : 'Email delivery was skipped because SMTP is not configured. Add SMTP_USER and SMTP_PASS to your environment to receive live emails.'
+      }));
     } catch (err) {
       next(err);
     }

@@ -5,6 +5,7 @@ import { validateRequest } from '../middleware/validate.middleware';
 import { authenticateToken, optionalAuthenticate, requireRole } from '../middleware/auth.middleware';
 import { successResponse } from '../utils/api-response';
 import { BadRequestError, NotFoundError, ForbiddenError, ConcurrencyDoubleBookingError } from '../utils/errors';
+import { emailService } from '../services/email.service';
 
 export const bookingsRouter = Router();
 
@@ -169,6 +170,40 @@ bookingsRouter.post(
       );
 
       const newBooking = reservationResult.rows[0];
+
+      // Dispatch async luxury confirmation emails (non-blocking)
+      emailService.sendGuestConfirmation({
+        bookingReference: newBooking.booking_reference,
+        guestName: newBooking.guest_name || guestName || 'Valued Guest',
+        guestEmail: newBooking.guest_email || guestEmail || '',
+        guestPhone: newBooking.guest_phone || guestPhone || '',
+        roomName: assignedRoom.room_type_name,
+        roomNumber: assignedRoom.room_number,
+        floor: assignedRoom.floor,
+        checkInDate,
+        checkOutDate,
+        totalNights,
+        totalAmount,
+        paymentStatus: newBooking.payment_status || 'unpaid',
+        specialRequests: specialRequests || null,
+      }).catch(e => console.warn('[EmailService] Async guest confirmation error:', e));
+
+      emailService.sendAdminAlert({
+        bookingReference: newBooking.booking_reference,
+        guestName: newBooking.guest_name || guestName || 'Valued Guest',
+        guestEmail: newBooking.guest_email || guestEmail || '',
+        guestPhone: newBooking.guest_phone || guestPhone || '',
+        roomName: assignedRoom.room_type_name,
+        roomNumber: assignedRoom.room_number,
+        floor: assignedRoom.floor,
+        checkInDate,
+        checkOutDate,
+        totalNights,
+        totalAmount,
+        paymentStatus: newBooking.payment_status || 'unpaid',
+        specialRequests: specialRequests || null,
+      }).catch(e => console.warn('[EmailService] Async admin alert error:', e));
+
       res.status(201).json(successResponse(newBooking));
     } catch (err: any) {
       if (err.code === '23P01' || (err.message && err.message.includes('DOUBLE_BOOKING_CONFLICT'))) {

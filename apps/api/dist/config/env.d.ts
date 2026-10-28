@@ -13,6 +13,13 @@ declare const envSchema: z.ZodObject<{
     DB_POOL_MAX: z.ZodDefault<z.ZodNumber>;
     DB_POOL_IDLE_TIMEOUT_MS: z.ZodDefault<z.ZodNumber>;
     DB_POOL_CONNECTION_TIMEOUT_MS: z.ZodDefault<z.ZodNumber>;
+    SMTP_HOST: z.ZodDefault<z.ZodString>;
+    SMTP_PORT: z.ZodDefault<z.ZodNumber>;
+    SMTP_SECURE: z.ZodEffects<z.ZodDefault<z.ZodBoolean>, boolean, unknown>;
+    SMTP_USER: z.ZodOptional<z.ZodString>;
+    SMTP_PASS: z.ZodOptional<z.ZodString>;
+    SMTP_FROM: z.ZodDefault<z.ZodString>;
+    ADMIN_NOTIFICATION_EMAIL: z.ZodDefault<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     PORT: number;
     NODE_ENV: "development" | "test" | "production";
@@ -24,9 +31,16 @@ declare const envSchema: z.ZodObject<{
     DB_POOL_MAX: number;
     DB_POOL_IDLE_TIMEOUT_MS: number;
     DB_POOL_CONNECTION_TIMEOUT_MS: number;
+    SMTP_HOST: string;
+    SMTP_PORT: number;
+    SMTP_SECURE: boolean;
+    SMTP_FROM: string;
+    ADMIN_NOTIFICATION_EMAIL: string;
     SUPABASE_SERVICE_ROLE_KEY?: string | undefined;
     SUPABASE_JWT_SECRET?: string | undefined;
     DIRECT_URL?: string | undefined;
+    SMTP_USER?: string | undefined;
+    SMTP_PASS?: string | undefined;
 }, {
     PORT?: number | undefined;
     NODE_ENV?: unknown;
@@ -41,6 +55,13 @@ declare const envSchema: z.ZodObject<{
     DB_POOL_MAX?: number | undefined;
     DB_POOL_IDLE_TIMEOUT_MS?: number | undefined;
     DB_POOL_CONNECTION_TIMEOUT_MS?: number | undefined;
+    SMTP_HOST?: string | undefined;
+    SMTP_PORT?: number | undefined;
+    SMTP_SECURE?: unknown;
+    SMTP_USER?: string | undefined;
+    SMTP_PASS?: string | undefined;
+    SMTP_FROM?: string | undefined;
+    ADMIN_NOTIFICATION_EMAIL?: string | undefined;
 }>;
 export type Env = z.infer<typeof envSchema>;
 export declare const env: {
@@ -54,8 +75,15 @@ export declare const env: {
     DB_POOL_MAX: number;
     DB_POOL_IDLE_TIMEOUT_MS: number;
     DB_POOL_CONNECTION_TIMEOUT_MS: number;
+    SMTP_HOST: string;
+    SMTP_PORT: number;
+    SMTP_SECURE: boolean;
+    SMTP_FROM: string;
+    ADMIN_NOTIFICATION_EMAIL: string;
     SUPABASE_SERVICE_ROLE_KEY?: string | undefined;
     SUPABASE_JWT_SECRET?: string | undefined;
     DIRECT_URL?: string | undefined;
+    SMTP_USER?: string | undefined;
+    SMTP_PASS?: string | undefined;
 };
 export {};

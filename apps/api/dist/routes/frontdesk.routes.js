@@ -8,6 +8,7 @@ const auth_middleware_1 = require("../middleware/auth.middleware");
 const validate_middleware_1 = require("../middleware/validate.middleware");
 const api_response_1 = require("../utils/api-response");
 const errors_1 = require("../utils/errors");
+const email_service_1 = require("../services/email.service");
 exports.frontdeskRouter = (0, express_1.Router)();
 // Apply staff / admin authentication across all front-desk endpoints
 exports.frontdeskRouter.use(auth_middleware_1.authenticateToken);
@@ -210,6 +211,39 @@ exports.frontdeskRouter.post('/walk-in', (0, validate_middleware_1.validateReque
             await client.query("UPDATE public.rooms SET status = 'occupied', updated_at = NOW() WHERE id = $1", [room.id]);
         }
         await client.query('COMMIT');
+        // Dispatch async luxury confirmation emails (non-blocking)
+        if (email) {
+            email_service_1.emailService.sendGuestConfirmation({
+                bookingReference,
+                guestName: fullName,
+                guestEmail: email,
+                guestPhone: phoneNumber,
+                roomName: room.room_type_name,
+                roomNumber: room.room_number,
+                floor: room.floor,
+                checkInDate,
+                checkOutDate,
+                totalNights,
+                totalAmount,
+                paymentStatus: 'paid_at_desk',
+                specialRequests: specialRequests || null,
+            }).catch(e => console.warn('[EmailService] Async walk-in guest email error:', e));
+        }
+        email_service_1.emailService.sendAdminAlert({
+            bookingReference,
+            guestName: fullName,
+            guestEmail: email || 'walkin@guest.com',
+            guestPhone: phoneNumber,
+            roomName: room.room_type_name,
+            roomNumber: room.room_number,
+            floor: room.floor,
+            checkInDate,
+            checkOutDate,
+            totalNights,
+            totalAmount,
+            paymentStatus: 'paid_at_desk',
+            specialRequests: specialRequests || null,
+        }).catch(e => console.warn('[EmailService] Async walk-in admin alert error:', e));
         res.status(201).json((0, api_response_1.successResponse)({
             ...createdBooking,
             guest_name: fullName,
