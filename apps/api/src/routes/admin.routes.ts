@@ -81,11 +81,11 @@ adminRouter.get('/analytics/overview', async (req: Request, res: Response, next:
       SELECT 
         COUNT(*) FILTER (
           WHERE check_in_date = CURRENT_DATE 
-            AND status IN ('confirmed', 'pending')
+            AND status IN ('confirmed', 'pending', 'checked_in')
         )::int AS check_ins_today,
         COUNT(*) FILTER (
           WHERE check_out_date = CURRENT_DATE 
-            AND status = 'checked_in'
+            AND status IN ('checked_in', 'checked_out')
         )::int AS check_outs_today,
         COUNT(*) FILTER (
           WHERE status = 'pending'

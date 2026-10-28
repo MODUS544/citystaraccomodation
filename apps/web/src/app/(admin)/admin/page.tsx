@@ -66,13 +66,13 @@ export default function AdminDashboardPage() {
       return b.status === 'pending';
     }
     if (activeTab === 'arrivals') {
-      return b.status === 'confirmed' || b.status === 'pending';
+      return b.check_in_date?.startsWith(todayStr) || b.status === 'confirmed' || b.status === 'pending';
     }
     if (activeTab === 'in_house') {
       return b.status === 'checked_in';
     }
     if (activeTab === 'departures') {
-      return b.status === 'checked_in' || b.status === 'checked_out';
+      return b.check_out_date?.startsWith(todayStr) || b.status === 'checked_in' || b.status === 'checked_out';
     }
     return true;
   });
@@ -91,7 +91,7 @@ export default function AdminDashboardPage() {
             Hotel Operations & Front Desk
           </h1>
           <p className="text-[#818E9B] text-xs sm:text-sm font-normal mt-1">
-            Real-time occupancy metrics, VIP arrivals, and room inventory management.
+            Real-time occupancy metrics, VIP check-ins, and room inventory management.
           </p>
         </div>
 
@@ -187,11 +187,11 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* KPI 3: Check-Ins & Pending Requests */}
+        {/* KPI 3: Today's Check-In */}
         <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
-              Today's Arrivals
+              Today's Check-In
             </span>
             <div className="w-11 h-11 rounded-2xl bg-[#EBF4FF] text-[#1D4ED8] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
               <LogIn className="w-5 h-5" />
@@ -201,7 +201,7 @@ export default function AdminDashboardPage() {
             <span className="text-3xl font-bold text-[#1E2538] font-sans">
               {isLoading ? '...' : kpis?.checkInsToday || 0}
             </span>
-            <span className="text-xs text-[#818E9B] font-medium">Guests Expected</span>
+            <span className="text-xs text-[#818E9B] font-medium">Guests Checking In</span>
           </div>
           <div className="text-xs mt-3 pt-3 border-t border-[#F4F6F9] flex items-center gap-1.5">
             {pendingCount > 0 ? (
@@ -214,17 +214,17 @@ export default function AdminDashboardPage() {
             ) : (
               <>
                 <span className="w-2 h-2 rounded-full bg-[#135846]" />
-                <span className="text-[#135846] font-medium">All Arrivals Scheduled</span>
+                <span className="text-[#135846] font-medium">All Check-Ins Scheduled</span>
               </>
             )}
           </div>
         </div>
 
-        {/* KPI 4: Check-Outs & Departures */}
+        {/* KPI 4: Today's Check-Out */}
         <div className="bg-white border border-[#EAEFF4] rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.03)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.07)] hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group">
           <div className="flex items-center justify-between mb-4">
             <span className="text-xs uppercase tracking-wider text-[#818E9B] font-semibold">
-              Today's Departures
+              Today's Check-Out
             </span>
             <div className="w-11 h-11 rounded-2xl bg-[#FFEBEB] text-[#FE5757] flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
               <LogOut className="w-5 h-5" />
@@ -234,7 +234,7 @@ export default function AdminDashboardPage() {
             <span className="text-3xl font-bold text-[#1E2538] font-sans">
               {isLoading ? '...' : kpis?.checkOutsToday || 0}
             </span>
-            <span className="text-xs text-[#818E9B] font-medium">Check-outs Scheduled</span>
+            <span className="text-xs text-[#818E9B] font-medium">Guests Checking Out</span>
           </div>
           <div className="text-xs text-[#556376] mt-3 pt-3 border-t border-[#F4F6F9] flex items-center gap-1">
             <Clock className="w-3.5 h-3.5 text-[#818E9B]" />
@@ -277,9 +277,9 @@ export default function AdminDashboardPage() {
           {[
             { id: 'all', label: `All (${todaysActions.length})` },
             { id: 'pending', label: `Pending`, badge: pendingCount },
-            { id: 'arrivals', label: 'Arrivals' },
+            { id: 'arrivals', label: "Today's Check-In" },
             { id: 'in_house', label: 'In-House' },
-            { id: 'departures', label: 'Departures' },
+            { id: 'departures', label: "Today's Check-Out" },
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -342,6 +342,7 @@ export default function AdminDashboardPage() {
 
                   const checkInFormatted = formatDate(booking.check_in_date);
                   const isTodayArrival = booking.check_in_date?.startsWith(todayStr);
+                  const isTodayDeparture = booking.check_out_date?.startsWith(todayStr);
 
                   // Extract guest initials for Travl circular avatar
                   const initials = (booking.guest_name || 'Guest')
@@ -397,7 +398,10 @@ export default function AdminDashboardPage() {
                         <div className="text-[#818E9B] flex items-center gap-1 mt-0.5">
                           <span>{booking.total_nights} Nights</span>
                           {isTodayArrival && (
-                            <span className="text-[#135846] font-semibold">• Arriving Today</span>
+                            <span className="text-[#135846] font-semibold">• Check-In Today</span>
+                          )}
+                          {isTodayDeparture && (
+                            <span className="text-[#FE5757] font-semibold">• Check-Out Today</span>
                           )}
                         </div>
                       </td>
