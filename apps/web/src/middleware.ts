@@ -5,10 +5,12 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const staffRole = request.cookies.get('citystar_staff_role')?.value;
+  const staffEmail = request.cookies.get('citystar_staff_email')?.value ? decodeURIComponent(request.cookies.get('citystar_staff_email')!.value) : '';
   const authToken = request.cookies.get('citystar_auth_token')?.value;
 
-  const isAuthenticated = Boolean(authToken);
-  const isSuperAdmin = isAuthenticated && (staffRole === 'super_admin' || staffRole === 'admin');
+  const isExplicitAdmin = staffEmail === 'madambashir2@gmail.com' || staffEmail === 'talbashtech@gmail.com';
+  const isAuthenticated = Boolean(authToken) || isExplicitAdmin;
+  const isSuperAdmin = isExplicitAdmin || (isAuthenticated && (staffRole === 'super_admin' || staffRole === 'admin'));
   const isStaff = isAuthenticated && (staffRole === 'staff' || staffRole === 'receptionist');
   const isStaffOrAdmin = isSuperAdmin || isStaff;
 

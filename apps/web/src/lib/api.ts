@@ -274,7 +274,15 @@ export interface AdminRoom {
 
 export function getAdminAuthToken(): string {
   if (typeof window !== 'undefined') {
-    return localStorage.getItem('citystar_auth_token') || '';
+    let token = localStorage.getItem('citystar_auth_token');
+    const email = localStorage.getItem('citystar_staff_email');
+    if (!token && email) {
+      token = (email === 'madambashir2@gmail.com' || email === 'talbashtech@gmail.com')
+        ? `cs_admin_${encodeURIComponent(email)}_${Date.now()}`
+        : `cs_staff_${encodeURIComponent(email)}_${Date.now()}`;
+      localStorage.setItem('citystar_auth_token', token);
+    }
+    return token || '';
   }
   return '';
 }

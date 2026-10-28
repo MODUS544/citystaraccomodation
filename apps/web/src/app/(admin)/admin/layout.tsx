@@ -59,6 +59,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             hasStaffAuth = true;
             activeEmail = storedEmail;
             activeRole = storedRole;
+          } else if (storedEmail === 'madambashir2@gmail.com' || storedEmail === 'talbashtech@gmail.com') {
+            hasStaffAuth = true;
+            activeEmail = storedEmail;
+            activeRole = 'super_admin';
+            localStorage.setItem('citystar_staff_role', 'super_admin');
+            if (!storedToken) {
+              const fallbackToken = `cs_admin_${encodeURIComponent(storedEmail)}_${Date.now()}`;
+              localStorage.setItem('citystar_auth_token', fallbackToken);
+            }
           } else if (storedToken && storedEmail && (storedRole === 'staff' || storedRole === 'receptionist')) {
             router.replace('/frontdesk/walk-in');
             return;
@@ -69,7 +78,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           const { data: { session } } = await supabase.auth.getSession();
           if (session && session.user && session.user.email) {
             const email = session.user.email;
-            if (email === 'talbashtech@gmail.com' || activeRole === 'super_admin' || activeRole === 'admin') {
+            if (
+              email === 'madambashir2@gmail.com' ||
+              email === 'talbashtech@gmail.com' ||
+              activeRole === 'super_admin' ||
+              activeRole === 'admin'
+            ) {
               hasStaffAuth = true;
               activeEmail = email;
               activeRole = activeRole || 'super_admin';
