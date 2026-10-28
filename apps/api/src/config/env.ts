@@ -48,7 +48,7 @@ const envSchema = z.object({
 
   // Resend & SMTP Notification Parameters
   RESEND_API_KEY: z.string().optional(),
-  SMTP_HOST: z.string().default('smtp.resend.com'),
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
   SMTP_PORT: z.coerce.number().default(465),
   SMTP_SECURE: z.preprocess(
     (val) => val === 'true' || val === true || val === '1' || val === undefined,
@@ -56,7 +56,7 @@ const envSchema = z.object({
   ),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
-  SMTP_FROM: z.string().default('"City Star Hotel & Suites" <onboarding@resend.dev>'),
+  SMTP_FROM: z.string().default('"City Star Hotel & Suites" <talbashtech@gmail.com>'),
   ADMIN_NOTIFICATION_EMAIL: z.string().default('talbashtech@gmail.com'),
 });
 
