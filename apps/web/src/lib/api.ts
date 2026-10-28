@@ -279,6 +279,18 @@ export function getAdminAuthToken(): string {
   return '';
 }
 
+export function getAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
+  const token = getAdminAuthToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export async function fetchAdminOverview(token?: string): Promise<AdminOverviewResponse> {
   const activeToken = token || getAdminAuthToken();
   const headers: Record<string, string> = { 'Accept': 'application/json' };
@@ -765,4 +777,94 @@ export async function createWalkInBooking(payload: WalkInBookingPayload, token?:
   if (!json.success) throw new Error(json.error?.message || 'Failed to complete walk-in reservation');
   return json.data;
 }
+
+export interface DetailedAnalyticsMetrics {
+  grossRevenue: number;
+  adr: number;
+  occupancyRate: number;
+  revPar: number;
+  totalBookings: number;
+  totalNightsSold: number;
+  totalRooms: number;
+  currency: string;
+  currencySymbol: string;
+}
+
+export interface DetailedAnalyticsResponse {
+  period: string;
+  metrics: DetailedAnalyticsMetrics;
+  trend: Array<{
+    date_label: string;
+    revenue: number;
+    bookings: number;
+    nights: number;
+  }>;
+}
+
+export async function fetchDetailedAnalytics(period: 'daily' | 'weekly' | 'monthly' | 'yearly'): Promise<DetailedAnalyticsResponse> {
+  const headers = getAuthHeaders();
+  const res = await fetch(`${API_BASE_URL}/admin/analytics/detailed?period=${period}`, {
+    headers,
+    cache: 'no-store',
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to fetch detailed analytics');
+  return json.data;
+}
+
+export interface UserProfileRecord {
+  id: string;
+  full_name: string;
+  email: string;
+  phone_number?: string;
+  role: 'customer' | 'staff' | 'super_admin';
+  created_at: string;
+}
+
+export async function fetchAdminUsers(): Promise<UserProfileRecord[]> {
+  const headers = getAuthHeaders();
+  const res = await fetch(`${API_BASE_URL}/admin/users`, {
+    headers,
+    cache: 'no-store',
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to fetch user directory');
+  return json.data;
+}
+
+export async function updateUserRole(userId: string, role: 'customer' | 'staff' | 'super_admin'): Promise<UserProfileRecord> {
+  const headers = getAuthHeaders();
+  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ role }),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to update user role');
+  return json.data;
+}
+
+export async function markBookingPaidAtDesk(bookingId: string): Promise<any> {
+  const headers = getAuthHeaders();
+  const res = await fetch(`${API_BASE_URL}/admin/bookings/${bookingId}/pay-desk`, {
+    method: 'PATCH',
+    headers,
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to record desk payment');
+  return json.data;
+}
+
+export async function updateRoomRate(roomId: string, payload: { price_per_night?: number; is_available?: boolean }): Promise<any> {
+  const headers = getAuthHeaders();
+  const res = await fetch(`${API_BASE_URL}/admin/rooms/${roomId}/rate`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || 'Failed to update room rate');
+  return json.data;
+}
+
 

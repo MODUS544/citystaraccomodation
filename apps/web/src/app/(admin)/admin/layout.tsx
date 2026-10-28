@@ -28,9 +28,10 @@ import {
 import { supabase } from '../../../lib/supabase';
 
 const NAVIGATION_ITEMS = [
-  { name: 'Dashboard Overview', href: '/admin', icon: LayoutDashboard },
+  { name: 'Executive Analytics', href: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Operations & Queue', href: '/admin', icon: CalendarCheck2 },
   { name: 'Guest List', href: '/admin/bookings', icon: CalendarCheck2 },
-  { name: 'Room Inventory', href: '/admin/inventory', icon: BedDouble },
+  { name: 'Room Inventory & Rates', href: '/admin/inventory', icon: BedDouble },
   { name: 'Brand & Media CMS', href: '/admin/branding', icon: Palette },
 ];
 

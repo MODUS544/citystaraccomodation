@@ -134,9 +134,22 @@ bookingsRouter.post(
           $3::date,
           $4::date,
           $5::numeric,
-          $6::text
+          $6::text,
+          $7::text,
+          $8::text,
+          $9::text
         )`,
-        [guestId, assignedRoom.id, checkInDate, checkOutDate, totalAmount, specialRequests || null]
+        [
+          guestId,
+          assignedRoom.id,
+          checkInDate,
+          checkOutDate,
+          totalAmount,
+          specialRequests || null,
+          guestName || null,
+          guestEmail || null,
+          guestPhone || null,
+        ]
       );
 
       const newBooking = reservationResult.rows[0];

@@ -7,39 +7,57 @@ export function middleware(request: NextRequest) {
   const staffRole = request.cookies.get('citystar_staff_role')?.value;
   const authToken = request.cookies.get('citystar_auth_token')?.value;
 
-  const isStaffOrAdmin = authToken && (staffRole === 'super_admin' || staffRole === 'admin' || staffRole === 'staff' || staffRole === 'receptionist');
-  const isSuperAdmin = authToken && (staffRole === 'super_admin' || staffRole === 'admin');
+  const isAuthenticated = Boolean(authToken);
+  const isSuperAdmin = isAuthenticated && (staffRole === 'super_admin' || staffRole === 'admin');
+  const isStaff = isAuthenticated && (staffRole === 'staff' || staffRole === 'receptionist');
+  const isStaffOrAdmin = isSuperAdmin || isStaff;
 
-  // Protect /admin routes: Accessible exclusively to Super Admin / Admin
+  // 1. Protect /admin routes: Exclusive to Super Admin
   if (pathname.startsWith('/admin')) {
-    if (!isStaffOrAdmin) {
+    if (!isAuthenticated) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    // If staff (front desk) attempts to enter Super Admin command center, redirect to Front Desk
+    // If staff attempts to enter Super Admin command center, redirect to Staff Dashboard
     if (!isSuperAdmin) {
-      return NextResponse.redirect(new URL('/frontdesk/walk-in', request.url));
+      return NextResponse.redirect(new URL('/staff/dashboard', request.url));
     }
   }
 
-  // Protect /frontdesk routes: Accessible to Staff, Receptionists, and Super Admins
-  if (pathname.startsWith('/frontdesk')) {
+  // 2. Protect /staff routes: Accessible to Staff & Super Admin
+  if (pathname.startsWith('/staff')) {
+    if (!isAuthenticated) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
     if (!isStaffOrAdmin) {
+      return NextResponse.redirect(new URL('/rooms', request.url));
+    }
+  }
+
+  // 3. Protect /frontdesk routes: Accessible to Staff & Super Admin
+  if (pathname.startsWith('/frontdesk')) {
+    if (!isAuthenticated) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
   }
 
-  // If already authenticated and visiting /login, redirect to respective home portal
+  // 4. If already authenticated and visiting /login, redirect to respective home portal
   if (pathname === '/login') {
     if (isSuperAdmin) {
-      return NextResponse.redirect(new URL('/admin', request.url));
+      return NextResponse.redirect(new URL('/admin/dashboard', request.url));
     }
-    if (isStaffOrAdmin) {
-      return NextResponse.redirect(new URL('/frontdesk/walk-in', request.url));
+    if (isStaff) {
+      return NextResponse.redirect(new URL('/staff/dashboard', request.url));
+    }
+    if (isAuthenticated) {
+      return NextResponse.redirect(new URL('/rooms', request.url));
     }
   }
 
@@ -47,5 +65,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/frontdesk/:path*', '/login'],
+  matcher: ['/admin/:path*', '/staff/:path*', '/frontdesk/:path*', '/login'],
 };

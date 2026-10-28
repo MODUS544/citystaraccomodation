@@ -116,8 +116,21 @@ exports.bookingsRouter.post('/', auth_middleware_1.optionalAuthenticate, (0, val
           $3::date,
           $4::date,
           $5::numeric,
-          $6::text
-        )`, [guestId, assignedRoom.id, checkInDate, checkOutDate, totalAmount, specialRequests || null]);
+          $6::text,
+          $7::text,
+          $8::text,
+          $9::text
+        )`, [
+            guestId,
+            assignedRoom.id,
+            checkInDate,
+            checkOutDate,
+            totalAmount,
+            specialRequests || null,
+            guestName || null,
+            guestEmail || null,
+            guestPhone || null,
+        ]);
         const newBooking = reservationResult.rows[0];
         res.status(201).json((0, api_response_1.successResponse)(newBooking));
     }

@@ -73,11 +73,11 @@ exports.adminRouter.get('/analytics/overview', async (req, res, next) => {
       SELECT 
         COUNT(*) FILTER (
           WHERE check_in_date = CURRENT_DATE 
-            AND status IN ('confirmed', 'pending')
+            AND status IN ('confirmed', 'pending', 'checked_in')
         )::int AS check_ins_today,
         COUNT(*) FILTER (
           WHERE check_out_date = CURRENT_DATE 
-            AND status = 'checked_in'
+            AND status IN ('checked_in', 'checked_out')
         )::int AS check_outs_today,
         COUNT(*) FILTER (
           WHERE status = 'pending'
@@ -190,6 +190,7 @@ exports.adminRouter.get('/bookings', (0, validate_middleware_1.validateRequest)(
         if (search && search.trim()) {
             conditions.push(`(
           b.booking_reference ILIKE $${paramIndex} OR
+          b.booking_code ILIKE $${paramIndex} OR
           p.full_name ILIKE $${paramIndex} OR
           p.email ILIKE $${paramIndex} OR
           r.room_number ILIKE $${paramIndex}
@@ -203,17 +204,19 @@ exports.adminRouter.get('/bookings', (0, validate_middleware_1.validateRequest)(
         SELECT 
           b.id,
           b.booking_reference,
+          COALESCE(b.booking_code, b.booking_reference) AS booking_code,
           b.check_in_date,
           b.check_out_date,
           b.total_nights,
           b.total_amount,
           b.status,
+          COALESCE(b.payment_status, 'unpaid') AS payment_status,
           b.special_requests,
           b.created_at,
           p.id AS guest_id,
-          p.full_name AS guest_name,
-          p.email AS guest_email,
-          p.phone_number AS guest_phone,
+          COALESCE(b.guest_name, p.full_name, 'Valued Guest') AS guest_name,
+          COALESCE(b.guest_email, p.email, '') AS guest_email,
+          COALESCE(b.guest_phone, p.phone_number, '') AS guest_phone,
           r.id AS room_id,
           r.room_number,
           r.floor,
@@ -492,6 +495,229 @@ exports.adminRouter.patch('/room-types/:id', auth_middleware_1.requireSuperAdmin
             throw new errors_1.NotFoundError(`Room type with ID or slug '${id}' not found`);
         }
         res.json((0, api_response_1.successResponse)(result.rows[0]));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * PATCH /api/v1/admin/bookings/:id/pay-desk
+ * Front Desk: Mark reservation as paid over the counter
+ */
+exports.adminRouter.patch('/bookings/:id/pay-desk', async (req, res, next) => {
+    try {
+        const bookingId = req.params.id;
+        const result = await database_1.dbPool.query(`UPDATE public.bookings
+         SET payment_status = 'paid_at_desk',
+             status = CASE WHEN status = 'pending' THEN 'confirmed'::booking_status ELSE status END,
+             updated_at = NOW()
+         WHERE id::text = $1 OR booking_code = $1 OR booking_reference = $1
+         RETURNING *;`, [bookingId]);
+        if (result.rows.length === 0) {
+            throw new errors_1.NotFoundError(`Booking '${bookingId}' not found`);
+        }
+        res.json((0, api_response_1.successResponse)(result.rows[0]));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * GET /api/v1/admin/analytics/detailed
+ * Executive Analytics Engine: Dynamic reporting for Daily, Weekly, Monthly, Yearly
+ * Returns: Gross Revenue, ADR, Occupancy Rate %, RevPAR
+ */
+exports.adminRouter.get('/analytics/detailed', async (req, res, next) => {
+    try {
+        const period = req.query.period || 'monthly'; // daily | weekly | monthly | yearly
+        let intervalStr = "INTERVAL '30 days'";
+        let groupFormat = 'YYYY-MM-DD';
+        let dateTrunc = 'day';
+        if (period === 'daily') {
+            intervalStr = "INTERVAL '7 days'";
+            groupFormat = 'YYYY-MM-DD';
+            dateTrunc = 'day';
+        }
+        else if (period === 'weekly') {
+            intervalStr = "INTERVAL '12 weeks'";
+            groupFormat = 'YYYY-"W"IW';
+            dateTrunc = 'week';
+        }
+        else if (period === 'yearly') {
+            intervalStr = "INTERVAL '5 years'";
+            groupFormat = 'YYYY';
+            dateTrunc = 'year';
+        }
+        else {
+            // default monthly
+            intervalStr = "INTERVAL '12 months'";
+            groupFormat = 'YYYY-MM';
+            dateTrunc = 'month';
+        }
+        // 1. Room capacity
+        const roomCapacityRes = await database_1.dbPool.query(`
+        SELECT COUNT(*)::int AS total_rooms FROM public.rooms WHERE status != 'out_of_order';
+      `);
+        const totalRooms = roomCapacityRes.rows[0]?.total_rooms || 10;
+        // 2. Summary stats for period
+        const summaryRes = await database_1.dbPool.query(`
+        SELECT
+          COALESCE(SUM(total_amount), 0)::numeric AS gross_revenue,
+          COALESCE(COUNT(*), 0)::int AS total_bookings,
+          COALESCE(SUM(total_nights), 0)::int AS total_nights_sold
+        FROM public.bookings
+        WHERE status NOT IN ('cancelled', 'no_show')
+          AND created_at >= NOW() - ${intervalStr};
+      `);
+        const summary = summaryRes.rows[0];
+        const grossRevenue = parseFloat(summary.gross_revenue || '0');
+        const totalBookings = summary.total_bookings || 0;
+        const totalNightsSold = summary.total_nights_sold || 0;
+        // ADR = Gross Revenue / Total Nights Sold
+        const adr = totalNightsSold > 0 ? parseFloat((grossRevenue / totalNightsSold).toFixed(2)) : 0;
+        // Period duration in days
+        let daysInPeriod = 30;
+        if (period === 'daily')
+            daysInPeriod = 7;
+        if (period === 'weekly')
+            daysInPeriod = 84;
+        if (period === 'yearly')
+            daysInPeriod = 365;
+        const availableRoomNights = totalRooms * daysInPeriod;
+        const occupancyRate = availableRoomNights > 0
+            ? parseFloat(Math.min(((totalNightsSold / availableRoomNights) * 100), 100).toFixed(1))
+            : 0;
+        // RevPAR = ADR * (Occupancy Rate / 100)
+        const revPar = parseFloat((adr * (occupancyRate / 100)).toFixed(2));
+        // 3. Periodic Trend breakdown
+        const trendRes = await database_1.dbPool.query(`
+        SELECT
+          to_char(date_trunc('${dateTrunc}', created_at), '${groupFormat}') AS date_label,
+          COALESCE(SUM(total_amount), 0)::numeric AS revenue,
+          COALESCE(COUNT(*), 0)::int AS bookings,
+          COALESCE(SUM(total_nights), 0)::int AS nights
+        FROM public.bookings
+        WHERE status NOT IN ('cancelled', 'no_show')
+          AND created_at >= NOW() - ${intervalStr}
+        GROUP BY 1
+        ORDER BY 1 ASC;
+      `);
+        res.json((0, api_response_1.successResponse)({
+            period,
+            metrics: {
+                grossRevenue,
+                adr,
+                occupancyRate,
+                revPar,
+                totalBookings,
+                totalNightsSold,
+                totalRooms,
+                currency: 'NGN',
+                currencySymbol: '₦',
+            },
+            trend: trendRes.rows,
+        }));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * GET /api/v1/admin/users
+ * Super Admin: List all user profiles for role management
+ */
+exports.adminRouter.get('/users', async (req, res, next) => {
+    try {
+        const usersRes = await database_1.dbPool.query(`
+        SELECT 
+          id,
+          full_name,
+          email,
+          phone_number,
+          role,
+          created_at
+        FROM public.profiles
+        ORDER BY created_at DESC;
+      `);
+        res.json((0, api_response_1.successResponse)(usersRes.rows));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * PATCH /api/v1/admin/users/:id/role
+ * Super Admin: Assign or revoke staff and super_admin roles
+ */
+exports.adminRouter.patch('/users/:id/role', (0, auth_middleware_1.requireRole)(['super_admin', 'admin']), async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { role } = req.body;
+        if (!['customer', 'staff', 'super_admin'].includes(role)) {
+            throw new errors_1.BadRequestError("Role must be 'customer', 'staff', or 'super_admin'");
+        }
+        // Update public.profiles
+        const updateRes = await database_1.dbPool.query(`
+        UPDATE public.profiles
+        SET role = $1::user_role,
+            updated_at = NOW()
+        WHERE id = $2::uuid
+        RETURNING *;
+      `, [role, id]);
+        if (updateRes.rows.length === 0) {
+            throw new errors_1.NotFoundError(`User with id '${id}' not found`);
+        }
+        // Sync auth.users metadata
+        try {
+            await database_1.dbPool.query(`
+          UPDATE auth.users
+          SET raw_user_meta_data = jsonb_set(COALESCE(raw_user_meta_data, '{}'::jsonb), '{role}', to_jsonb($1::text))
+          WHERE id = $2::uuid;
+        `, [role, id]);
+        }
+        catch { }
+        res.json((0, api_response_1.successResponse)(updateRes.rows[0]));
+    }
+    catch (err) {
+        next(err);
+    }
+});
+/**
+ * PUT /api/v1/admin/rooms/:id/rate
+ * Super Admin: Authority over nightly rates in NGN and availability
+ */
+exports.adminRouter.put('/rooms/:id/rate', (0, auth_middleware_1.requireRole)(['super_admin', 'admin']), async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { price_per_night, is_available } = req.body;
+        const setClauses = [];
+        const values = [];
+        let idx = 1;
+        if (price_per_night !== undefined) {
+            setClauses.push(`price_per_night = $${idx++}`);
+            values.push(parseFloat(price_per_night));
+        }
+        if (is_available !== undefined) {
+            setClauses.push(`is_available = $${idx++}`);
+            values.push(Boolean(is_available));
+            // Sync operational status
+            setClauses.push(`status = CASE WHEN $${idx - 1} = true THEN 'available'::room_status ELSE 'maintenance'::room_status END`);
+        }
+        if (setClauses.length === 0) {
+            throw new errors_1.BadRequestError('No update fields provided');
+        }
+        setClauses.push('updated_at = NOW()');
+        values.push(id);
+        const updateRes = await database_1.dbPool.query(`
+        UPDATE public.rooms
+        SET ${setClauses.join(', ')}
+        WHERE id::text = $${idx}
+        RETURNING *;
+      `, values);
+        if (updateRes.rows.length === 0) {
+            throw new errors_1.NotFoundError(`Room with id '${id}' not found`);
+        }
+        res.json((0, api_response_1.successResponse)(updateRes.rows[0]));
     }
     catch (err) {
         next(err);

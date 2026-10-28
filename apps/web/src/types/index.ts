@@ -1,4 +1,4 @@
-export type UserRole = 'guest' | 'receptionist' | 'staff' | 'admin' | 'super_admin';
+export type UserRole = 'customer' | 'guest' | 'receptionist' | 'staff' | 'admin' | 'super_admin';
 
 export interface RoomType {
   id: string;
@@ -31,6 +31,8 @@ export interface AvailableRoom {
 export interface Booking {
   id: string;
   booking_reference: string;
+  booking_code?: string;
+  user_id?: string;
   guest_id?: string;
   walk_in_guest_id?: string;
   booked_by_staff_id?: string;
@@ -39,9 +41,9 @@ export interface Booking {
   check_out_date: string;
   total_nights: number;
   total_amount: number | string;
-  status: 'pending' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
+  status: 'pending' | 'pending_payment' | 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled';
   payment_method?: 'cash' | 'pos_terminal' | 'transfer' | 'card_online';
-  payment_status?: 'pending' | 'paid' | 'refunded' | 'failed';
+  payment_status?: 'unpaid' | 'paid_via_app' | 'paid_at_desk' | 'pending' | 'paid' | 'refunded' | 'failed';
   special_requests?: string;
   created_at: string;
   room_number?: string;
