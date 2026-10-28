@@ -7,11 +7,14 @@ exports.emailService = void 0;
 const nodemailer_1 = __importDefault(require("nodemailer"));
 const resend_1 = require("resend");
 const env_1 = require("../config/env");
+const database_1 = require("../config/database");
 class EmailService {
     resendClient = null;
     transporter = null;
     isConfigured = false;
     provider = 'none';
+    fromAddress = env_1.env.SMTP_FROM;
+    adminEmail = env_1.env.ADMIN_NOTIFICATION_EMAIL;
     constructor() {
         this.initProviders();
     }
@@ -39,11 +42,13 @@ class EmailService {
                         pass: env_1.env.SMTP_PASS,
                     },
                     tls: {
-                        rejectUnauthorized: false, // Prevents self-signed or proxy TLS issues
+                        rejectUnauthorized: false,
                     },
                 });
                 this.isConfigured = true;
                 this.provider = 'smtp';
+                this.fromAddress = env_1.env.SMTP_FROM;
+                this.adminEmail = env_1.env.ADMIN_NOTIFICATION_EMAIL;
                 console.log(`[EmailService] SMTP transporter configured for ${env_1.env.SMTP_USER} via ${env_1.env.SMTP_HOST}:${env_1.env.SMTP_PORT}`);
                 return;
             }
@@ -53,7 +58,47 @@ class EmailService {
         }
         this.isConfigured = false;
         this.provider = 'none';
-        console.log('[EmailService] Neither RESEND_API_KEY nor SMTP credentials provided. Running in simulation mode.');
+    }
+    /**
+     * Lazily ensure transporter is initialized (including database site_settings fallback for cloud deploys)
+     */
+    async ensureTransporter() {
+        if (this.isConfigured && (this.transporter || this.resendClient)) {
+            return true;
+        }
+        // Try re-checking env in case it changed
+        this.initProviders();
+        if (this.isConfigured)
+            return true;
+        // Check PostgreSQL public.site_settings for persisted credentials
+        try {
+            const dbRes = await database_1.dbPool.query("SELECT value FROM public.site_settings WHERE key = 'smtp_config' LIMIT 1");
+            if (dbRes.rows.length > 0 && dbRes.rows[0].value) {
+                const conf = dbRes.rows[0].value;
+                if (conf.user && conf.pass) {
+                    this.transporter = nodemailer_1.default.createTransport({
+                        host: conf.host || 'smtp.gmail.com',
+                        port: Number(conf.port) || 465,
+                        secure: Number(conf.port) === 465 || conf.secure !== false,
+                        auth: {
+                            user: conf.user,
+                            pass: conf.pass,
+                        },
+                        tls: { rejectUnauthorized: false },
+                    });
+                    this.isConfigured = true;
+                    this.provider = 'smtp';
+                    this.fromAddress = conf.from || `\"City Star Hotel & Suites\" <${conf.user}>`;
+                    this.adminEmail = conf.adminEmail || conf.user;
+                    console.log(`[EmailService] Successfully loaded SMTP credentials from database site_settings for ${conf.user}!`);
+                    return true;
+                }
+            }
+        }
+        catch (dbErr) {
+            console.warn('[EmailService] Failed to query smtp_config from database:', dbErr);
+        }
+        return false;
     }
     getStatus() {
         return {
@@ -241,12 +286,15 @@ class EmailService {
      * Internal generic mail dispatcher
      */
     async sendMail(options) {
+        // Ensure transporter is loaded (via env or DB fallback)
+        await this.ensureTransporter();
+        const from = this.fromAddress || env_1.env.SMTP_FROM || '"City Star Hotel & Suites" <madambashir2@gmail.com>';
         if (!this.isConfigured) {
             console.log(`\n================== [EMAIL SIMULATION LOG] ==================`);
             console.log(`To      : ${options.to}`);
-            console.log(`From    : ${env_1.env.SMTP_FROM}`);
+            console.log(`From    : ${from}`);
             console.log(`Subject : ${options.subject}`);
-            console.log(`Status  : Skipped real delivery (Set RESEND_API_KEY in apps/api/.env or Render to send live emails)`);
+            console.log(`Status  : Skipped real delivery (Set SMTP_PASS or RESEND_API_KEY to send live emails)`);
             console.log(`============================================================\n`);
             return false;
         }
@@ -254,7 +302,7 @@ class EmailService {
         if (this.provider === 'resend' && this.resendClient) {
             try {
                 const { data, error } = await this.resendClient.emails.send({
-                    from: env_1.env.SMTP_FROM,
+                    from,
                     to: [options.to],
                     subject: options.subject,
                     html: options.html,
@@ -276,7 +324,7 @@ class EmailService {
         if (this.provider === 'smtp' && this.transporter) {
             try {
                 const info = await this.transporter.sendMail({
-                    from: env_1.env.SMTP_FROM,
+                    from,
                     to: options.to,
                     subject: options.subject,
                     text: options.text,

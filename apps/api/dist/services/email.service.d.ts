@@ -21,8 +21,14 @@ declare class EmailService {
     private transporter;
     private isConfigured;
     private provider;
+    private fromAddress;
+    private adminEmail;
     constructor();
     private initProviders;
+    /**
+     * Lazily ensure transporter is initialized (including database site_settings fallback for cloud deploys)
+     */
+    ensureTransporter(): Promise<boolean>;
     getStatus(): {
         configured: boolean;
         provider: "resend" | "smtp" | "none";
