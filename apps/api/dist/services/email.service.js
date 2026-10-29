@@ -117,8 +117,20 @@ class EmailService {
      * Dispatches a 5-star Luxury Reservation Confirmation to the Guest
      */
     async sendGuestConfirmation(data) {
-        if (!data.guestEmail || data.guestEmail.includes('example.com') || data.guestEmail.includes('guest@citystarhotel.com')) {
-            console.log(`[EmailService] Skipping guest email for placeholder address: ${data.guestEmail}`);
+        const email = (data.guestEmail || '').trim().toLowerCase();
+        const isPlaceholder = !email ||
+            email.endsWith('@test.com') ||
+            email.includes('@test.') ||
+            email.includes('example.') ||
+            email.includes('@localhost') ||
+            email.endsWith('.invalid') ||
+            email.endsWith('.test') ||
+            email.startsWith('walkin@') ||
+            email.includes('guest@citystarhotel.com') ||
+            !email.includes('@') ||
+            !email.split('@')[1]?.includes('.');
+        if (isPlaceholder) {
+            console.log(`[EmailService] Skipping guest email for placeholder/test address: ${data.guestEmail}`);
             return false;
         }
         const formattedAmount = Number(data.totalAmount).toLocaleString('en-NG', {
