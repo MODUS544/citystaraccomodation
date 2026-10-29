@@ -20,8 +20,10 @@ const walkInBookingSchema = z.object({
   phoneNumber: z.string().min(5, 'Valid phone number is required'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dateOfBirth must be YYYY-MM-DD format').optional().or(z.literal('')),
-  idType: z.enum(['nin', 'national_id', 'passport', 'drivers_license', 'voters_card']),
-  idNumber: z.string().min(3, 'Official ID document number is required'),
+  idType: z.enum(['nin', 'national_id', 'passport', 'drivers_license', 'voters_card']).optional().default('nin'),
+  idNumber: z.string().optional().default(''),
+  keyNumber: z.string().optional(),
+  paymentReference: z.string().optional(),
   address: z.string().optional(),
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
@@ -125,6 +127,8 @@ frontdeskRouter.post(
         dateOfBirth,
         idType,
         idNumber,
+        keyNumber,
+        paymentReference,
         address,
         emergencyContactName,
         emergencyContactPhone,
@@ -137,31 +141,35 @@ frontdeskRouter.post(
         specialRequests,
       } = req.body;
 
-      const staffUserId = req.user?.id || null;
+      const isUuid = (str: any): str is string => typeof str === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+      const rawStaffId = req.user?.id;
+      const staffUserId = isUuid(rawStaffId) ? rawStaffId : null;
+      const resolvedIdType = idType || 'nin';
+      const resolvedIdNumber = idNumber && idNumber.trim() ? idNumber.trim() : `WALK-${Date.now().toString(36).toUpperCase()}`;
 
       // 1. Upsert walk-in guest record
       let walkInGuestId: string;
       const existingGuest = await client.query(
-        'SELECT id FROM public.walk_in_guests WHERE id_number = $1 OR phone_number = $2 LIMIT 1',
-        [idNumber, phoneNumber]
+        'SELECT id FROM public.walk_in_guests WHERE (id_number = $1 AND id_number != \'\') OR phone_number = $2 LIMIT 1',
+        [resolvedIdNumber, phoneNumber]
       );
 
       if (existingGuest.rows.length > 0) {
         walkInGuestId = existingGuest.rows[0].id;
         await client.query(
           `UPDATE public.walk_in_guests 
-           SET full_name = $1, email = COALESCE($2, email), date_of_birth = $3, id_type = $4, id_number = $5,
+           SET full_name = $1, email = COALESCE($2, email), date_of_birth = $3, id_type = $4, id_number = COALESCE(id_number, $5),
                address = COALESCE($6, address), emergency_contact_name = COALESCE($7, emergency_contact_name),
                emergency_contact_phone = COALESCE($8, emergency_contact_phone)
            WHERE id = $9`,
-          [fullName, email || null, dateOfBirth || null, idType, idNumber, address || null, emergencyContactName || null, emergencyContactPhone || null, walkInGuestId]
+          [fullName, email || null, dateOfBirth || null, resolvedIdType, resolvedIdNumber, address || null, emergencyContactName || null, emergencyContactPhone || null, walkInGuestId]
         );
       } else {
         const newGuest = await client.query(
           `INSERT INTO public.walk_in_guests (
             full_name, phone_number, email, date_of_birth, id_type, id_number, address, emergency_contact_name, emergency_contact_phone
           ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-          [fullName, phoneNumber, email || null, dateOfBirth || null, idType, idNumber, address || null, emergencyContactName || null, emergencyContactPhone || null]
+          [fullName, phoneNumber, email || null, dateOfBirth || null, resolvedIdType, resolvedIdNumber, address || null, emergencyContactName || null, emergencyContactPhone || null]
         );
         walkInGuestId = newGuest.rows[0].id;
       }
@@ -243,6 +251,14 @@ frontdeskRouter.post(
         RETURNING *;
       `;
 
+      const keyNumStr = keyNumber ? String(keyNumber).trim() : '';
+      const payRefStr = paymentReference ? String(paymentReference).trim() : '';
+      const notesParts = [];
+      if (keyNumStr) notesParts.push(`Key / Card #: ${keyNumStr}`);
+      if (payRefStr) notesParts.push(`POS Slip #: ${payRefStr}`);
+      if (specialRequests && specialRequests.trim()) notesParts.push(specialRequests.trim());
+      const finalNotes = notesParts.length > 0 ? notesParts.join(' | ') : null;
+
       const bookingResult = await client.query(insertBookingQuery, [
         bookingReference,
         walkInGuestId,
@@ -253,7 +269,7 @@ frontdeskRouter.post(
         totalAmount,
         initialStatus,
         paymentMethod,
-        specialRequests || null,
+        finalNotes,
         fullName,
         phoneNumber,
         email || null,
@@ -312,9 +328,11 @@ frontdeskRouter.post(
           guest_name: fullName,
           guest_phone: phoneNumber,
           guest_email: email || null,
-          id_type: idType,
-          id_number: idNumber,
+          id_type: resolvedIdType,
+          id_number: resolvedIdNumber,
           room_number: room.room_number,
+          key_number: keyNumStr || null,
+          payment_reference: payRefStr || null,
           floor: room.floor,
           room_type_name: room.room_type_name,
           auto_checked_in: autoCheckIn,

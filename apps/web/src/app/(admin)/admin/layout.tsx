@@ -245,7 +245,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               >
                 <span className="flex items-center gap-2">
                   <DoorOpen className="w-4 h-4 text-[#135846]" />
-                  Front Desk Walk-In
+                  Check-In & Registration
                 </span>
                 <span className="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-[#135846] text-white">
                   Terminal

@@ -205,9 +205,9 @@ export interface WalkInBookingPayload {
     phoneNumber: string;
     email?: string;
     dateOfBirth?: string;
-    idDocumentType: IdDocumentType;
-    idNumber: string;
-    address: string;
+    idDocumentType?: IdDocumentType;
+    idNumber?: string;
+    address?: string;
     emergencyContactName?: string;
     emergencyContactPhone?: string;
   };
@@ -220,6 +220,7 @@ export interface WalkInBookingPayload {
     children?: number;
     paymentMethod: 'cash' | 'pos_terminal' | 'transfer' | 'card_online';
     paymentReference?: string;
+    keyNumber?: string;
     autoCheckIn?: boolean;
     specialRequests?: string;
   };
@@ -231,6 +232,8 @@ export interface WalkInBookingPayload {
   idType?: IdDocumentType;
   idNumber?: string;
   address?: string;
+  keyNumber?: string;
+  paymentReference?: string;
   emergencyContactName?: string;
   emergencyContactPhone?: string;
   roomId?: string;

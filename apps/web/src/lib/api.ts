@@ -770,6 +770,8 @@ export async function createWalkInBooking(payload: WalkInBookingPayload, token?:
           checkInDate: payload.booking.checkInDate,
           checkOutDate: payload.booking.checkOutDate,
           paymentMethod: payload.booking.paymentMethod,
+          paymentReference: payload.booking.paymentReference,
+          keyNumber: payload.booking.keyNumber,
           autoCheckIn: payload.booking.autoCheckIn ?? true,
           specialRequests: payload.booking.specialRequests,
         }

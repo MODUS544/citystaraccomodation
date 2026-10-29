@@ -24,7 +24,7 @@ import {
 
 const STAFF_NAV_ITEMS = [
   { name: 'Dashboard Overview', href: '/staff/dashboard', icon: LayoutDashboard },
-  { name: 'Express Walk-In', href: '/frontdesk/walk-in', icon: DoorOpen },
+  { name: 'Check-In & Registration', href: '/frontdesk/walk-in', icon: DoorOpen },
   { name: 'Room Inventory', href: '/admin/inventory', icon: BedDouble },
   { name: 'Guest Registry', href: '/admin/bookings', icon: Users },
 ];

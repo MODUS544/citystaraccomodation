@@ -77,6 +77,7 @@ export default function WalkInPage() {
   // Payment & Key Handover State
   const [paymentMethod, setPaymentMethod] = useState<'pos_terminal' | 'cash' | 'transfer' | 'card_online'>('pos_terminal');
   const [paymentReference, setPaymentReference] = useState('');
+  const [keyNumber, setKeyNumber] = useState('');
   const [autoCheckIn, setAutoCheckIn] = useState(true);
   const [specialRequests, setSpecialRequests] = useState('');
 
@@ -203,14 +204,6 @@ export default function WalkInPage() {
       setFormError('Guest phone number is required.');
       return;
     }
-    if (!idNumber.trim()) {
-      setFormError('Government identification number is mandatory for KYC compliance.');
-      return;
-    }
-    if (!address.trim()) {
-      setFormError('Guest residential address is required.');
-      return;
-    }
     if (!selectedRoomTypeId) {
       setFormError('Please select a room category.');
       return;
@@ -222,9 +215,7 @@ export default function WalkInPage() {
         phoneNumber: phoneNumber.trim(),
         email: email.trim() || undefined,
         dateOfBirth: dateOfBirth || undefined,
-        idDocumentType,
-        idNumber: idNumber.trim(),
-        address: address.trim(),
+        address: address.trim() || undefined,
         emergencyContactName: emergencyContactName.trim() || undefined,
         emergencyContactPhone: emergencyContactPhone.trim() || undefined,
       },
@@ -237,6 +228,7 @@ export default function WalkInPage() {
         children: Number(children),
         paymentMethod,
         paymentReference: paymentReference.trim() || undefined,
+        keyNumber: keyNumber.trim() || undefined,
         autoCheckIn,
         specialRequests: specialRequests.trim() || undefined,
       },
@@ -258,6 +250,7 @@ export default function WalkInPage() {
     setEmergencyContactName('');
     setEmergencyContactPhone('');
     setPaymentReference('');
+    setKeyNumber('');
     setSpecialRequests('');
     setAutoCheckIn(true);
     refetchRooms();
@@ -274,17 +267,17 @@ export default function WalkInPage() {
             </span>
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-white tracking-tight">
-            Walk-In Guest Registration & Key Handover
+            Check-In, Check-Out & Registration
           </h1>
           <p className="text-gray-400 text-sm mt-1">
-            Mandatory KYC compliance, atomic physical room locking, POS settlement, and immediate digital check-in.
+            Guest registration, room assignment, key handover, folio settlement, and instant digital check-in & check-out.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
           <div className="px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2 text-xs text-gray-300">
-            <ShieldCheck className="w-4 h-4 text-hotel-gold" />
-            <span>KYC Security Enforced</span>
+            <KeyRound className="w-4 h-4 text-hotel-gold" />
+            <span>Key & Room Handover</span>
           </div>
         </div>
       </div>
@@ -302,7 +295,7 @@ export default function WalkInPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by phone number or ID number (e.g. +234... or NIN)..."
+              placeholder="Search by phone number or guest name (e.g. +234...)..."
               className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold transition-colors"
             />
           </div>
@@ -358,12 +351,12 @@ export default function WalkInPage() {
                   <User className="w-4 h-4 text-hotel-gold" />
                 </div>
                 <div>
-                  <h3 className="font-serif text-lg font-bold text-white">Section 1: Guest KYC Identity</h3>
-                  <p className="text-xs text-gray-400">Official government record required for all hospitality guests.</p>
+                  <h3 className="font-serif text-lg font-bold text-white">Section 1: Guest Information & Registration</h3>
+                  <p className="text-xs text-gray-400">Guest profile and contact information for check-in records.</p>
                 </div>
               </div>
-              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-white/5 border border-white/10 text-gray-400">
-                Mandatory
+              <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
+                Front Desk
               </span>
             </div>
 
@@ -418,47 +411,12 @@ export default function WalkInPage() {
               </div>
             </div>
 
-            {/* Document Verification Row */}
-            <div className="pt-4 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1.5">
-                  ID Document Type *
-                </label>
-                <select
-                  value={idDocumentType}
-                  onChange={(e) => setIdDocumentType(e.target.value as any)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-[#080C15] border border-white/10 text-xs text-white focus:outline-none focus:border-hotel-gold"
-                >
-                  <option value="nin">National Identification Number (NIN)</option>
-                  <option value="national_id">National Identity Card</option>
-                  <option value="passport">International Passport</option>
-                  <option value="drivers_license">Driver&apos;s License</option>
-                  <option value="voters_card">Voter&apos;s Card</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1.5">
-                  ID Document Number *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={idNumber}
-                  onChange={(e) => setIdNumber(e.target.value)}
-                  placeholder="Enter document reference number"
-                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold"
-                />
-              </div>
-            </div>
-
             <div>
               <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1.5">
-                Residential Address *
+                Residential Address (Optional)
               </label>
               <input
                 type="text"
-                required
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Street address, City, State"
@@ -632,7 +590,13 @@ export default function WalkInPage() {
                       <button
                         type="button"
                         key={roomId}
-                        onClick={() => setSelectedRoomId(roomId)}
+                        onClick={() => {
+                          setSelectedRoomId(roomId);
+                          const rNo = r.room_number || r.roomNumber;
+                          if (rNo && !keyNumber) {
+                            setKeyNumber(`Room ${rNo}`);
+                          }
+                        }}
                         className={`p-3 rounded-xl border text-center transition-all ${
                           isSelected
                             ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 font-bold'
@@ -658,8 +622,8 @@ export default function WalkInPage() {
                 <CreditCard className="w-4 h-4 text-hotel-gold" />
               </div>
               <div>
-                <h3 className="font-serif text-lg font-bold text-white">Section 3: Folio & Payment</h3>
-                <p className="text-xs text-gray-400">Rate computation & key issue</p>
+                <h3 className="font-serif text-lg font-bold text-white">Payment & Key Allocation</h3>
+                <p className="text-xs text-gray-400">Payment settlement & physical key assignment</p>
               </div>
             </div>
 
@@ -702,21 +666,21 @@ export default function WalkInPage() {
               </select>
 
               <div>
-                <label className="block text-xs text-gray-400 mb-1.5">
+                <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1.5">
                   Payment Reference / POS Slip #
                 </label>
                 <input
                   type="text"
                   value={paymentReference}
                   onChange={(e) => setPaymentReference(e.target.value)}
-                  placeholder="e.g. POS-STANBIC-98124"
+                  placeholder="e.g. POS-STANBIC-98124 or Slip #"
                   className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold"
                 />
               </div>
             </div>
 
-            {/* Instant Key Handover Toggle */}
-            <div className="p-4 rounded-2xl bg-hotel-gold/10 border border-hotel-gold/30 space-y-2">
+            {/* Instant Key Handover & Key/Room Number Assignment */}
+            <div className="p-4 rounded-2xl bg-hotel-gold/10 border border-hotel-gold/30 space-y-3">
               <label className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="checkbox"
@@ -734,6 +698,24 @@ export default function WalkInPage() {
                   </p>
                 </div>
               </label>
+
+              {/* Key Number or Room Number Input Option */}
+              <div className="pt-2 border-t border-hotel-gold/20">
+                <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1 flex items-center gap-1.5">
+                  <KeyRound className="w-3.5 h-3.5 text-hotel-gold" />
+                  Key Number or Room Number
+                </label>
+                <input
+                  type="text"
+                  value={keyNumber}
+                  onChange={(e) => setKeyNumber(e.target.value)}
+                  placeholder="e.g. Key #104 or Room 104"
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#080C15] border border-hotel-gold/40 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-hotel-gold transition-colors"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Specify the key card number or assigned room number handed to the guest.
+                </p>
+              </div>
             </div>
 
             {/* Front Desk Notes */}
@@ -757,12 +739,12 @@ export default function WalkInPage() {
               {walkInMutation.isPending ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>Processing Walk-In...</span>
+                  <span>Processing Check-In...</span>
                 </>
               ) : (
                 <>
-                  <UserPlus className="w-4 h-4" />
-                  <span>Confirm Walk-In & Handover Key</span>
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Issue Physical Key & Check-In Immediately</span>
                 </>
               )}
             </button>
@@ -776,9 +758,11 @@ export default function WalkInPage() {
           <div className="my-8 max-w-md w-full">
             <PaymentReceipt
               receipt={{
-                receiptNo: bookingSuccessData.bookingReference || 'CH.MAVBU',
-                guestName: fullName || 'Abdullahi Musa',
-                roomNo: bookingSuccessData.roomNumber || '204',
+                receiptNo: bookingSuccessData.bookingReference || bookingSuccessData.booking_reference || 'CH.MAVBU',
+                guestName: fullName || 'Guest',
+                roomNo: keyNumber.trim()
+                  ? `${bookingSuccessData.room_number || bookingSuccessData.roomNumber || 'Room'} (Key: ${keyNumber.trim()})`
+                  : (bookingSuccessData.room_number || bookingSuccessData.roomNumber || '204'),
                 roomName: selectedRoomType?.name || 'Deluxe Room',
                 nights: totalNights,
                 roomRate: roomRate,

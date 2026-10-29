@@ -189,7 +189,7 @@ export default function FrontDeskLayout({ children }: { children: React.ReactNod
             }`}
           >
             <UserPlus className="w-4 h-4 text-hotel-gold" />
-            <span>Walk-In Registration</span>
+            <span>Check-In, Check-Out & Registration</span>
           </Link>
 
           {isSuperAdmin && (
