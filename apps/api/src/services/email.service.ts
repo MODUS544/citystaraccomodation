@@ -1,7 +1,35 @@
 import nodemailer, { Transporter } from 'nodemailer';
 import { Resend } from 'resend';
+import path from 'path';
+import fs from 'fs';
 import { env } from '../config/env';
 import { dbPool } from '../config/database';
+
+function getLogoAttachment(): { filename: string; path: string; cid: string } | null {
+  const candidates = [
+    path.resolve(__dirname, '../assets/city-star-logo.jpg'),
+    path.resolve(__dirname, '../../assets/city-star-logo.jpg'),
+    path.resolve(__dirname, '../../../web/public/city-star-receipt-logo.jpg'),
+    path.resolve(process.cwd(), 'apps/api/src/assets/city-star-logo.jpg'),
+    path.resolve(process.cwd(), 'apps/api/dist/assets/city-star-logo.jpg'),
+    path.resolve(process.cwd(), 'apps/web/public/city-star-receipt-logo.jpg'),
+    '/Users/mac/City star accomodation /apps/api/src/assets/city-star-logo.jpg',
+    '/Users/mac/City star accomodation /apps/web/public/city-star-receipt-logo.jpg',
+  ];
+
+  for (const c of candidates) {
+    try {
+      if (fs.existsSync(c)) {
+        return {
+          filename: 'city-star-logo.jpg',
+          path: c,
+          cid: 'citystarlogo',
+        };
+      }
+    } catch {}
+  }
+  return null;
+}
 
 /**
  * Interface representing booking details for email notifications
@@ -106,7 +134,7 @@ class EmailService {
           });
           this.isConfigured = true;
           this.provider = 'smtp';
-          this.fromAddress = conf.from || `\"City Star Hotel & Suites\" <${conf.user}>`;
+          this.fromAddress = conf.from || `"City Star Hotel & Accomodation" <${conf.user}>`;
           this.adminEmail = conf.adminEmail || conf.user;
           console.log(`[EmailService] Successfully loaded SMTP credentials from database site_settings for ${conf.user}!`);
           return true;
@@ -161,111 +189,273 @@ class EmailService {
       currency: 'NGN',
     });
 
+    const logoAttachment = getLogoAttachment();
+    const attachments = logoAttachment ? [logoAttachment] : [];
+
+    const roomDisplay = data.roomNumber
+      ? `${data.roomName} (Room ${data.roomNumber})`
+      : data.roomName;
+
     const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reservation Confirmation - City Star Hotel & Suites</title>
+  <title>Reservation Confirmation - City Star Hotel & Accomodation</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0B1E19; margin: 0; padding: 20px; color: #1E2538; }
-    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .header { background: linear-gradient(135deg, #0B1E19 0%, #135846 100%); padding: 36px 24px; text-align: center; border-bottom: 3px solid #C5A880; }
-    .logo-title { color: #C5A880; font-size: 24px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin: 0; }
-    .logo-sub { color: #ffffff; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; opacity: 0.9; }
-    .content { padding: 32px 28px; }
-    .greeting { font-size: 18px; font-weight: 700; color: #135846; margin-bottom: 12px; }
-    .ref-badge { background: #F4F8F6; border: 2px dashed #135846; border-radius: 12px; padding: 18px; text-align: center; margin: 24px 0; }
-    .ref-label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 1.5px; }
-    .ref-code { font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 900; color: #135846; letter-spacing: 3px; margin-top: 4px; }
-    .details-table { width: 100%; border-collapse: collapse; margin: 24px 0; }
-    .details-table td { padding: 12px 0; border-bottom: 1px solid #EAEFF4; font-size: 14px; }
-    .details-table td.label { color: #718096; font-weight: 600; width: 40%; }
-    .details-table td.value { color: #1E2538; font-weight: 700; text-align: right; }
-    .total-row td { border-bottom: 2px solid #135846; font-size: 16px; padding-top: 16px; color: #135846 !important; font-weight: 800; }
-    .instructions { background: #FFFDF9; border-left: 4px solid #C5A880; padding: 16px; border-radius: 4px; margin: 24px 0; font-size: 13px; color: #4A5568; line-height: 1.6; }
-    .footer { background: #F8FAFB; padding: 24px; text-align: center; font-size: 12px; color: #A0AEC0; border-top: 1px solid #EAEFF4; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #0B1E19;
+      margin: 0;
+      padding: 24px 12px;
+      color: #1E2538;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+    }
+    .header {
+      background: linear-gradient(135deg, #071310 0%, #0E2922 50%, #135846 100%);
+      padding: 36px 24px 28px 24px;
+      text-align: center;
+      border-bottom: 3px solid #D4AF37;
+    }
+    .logo-container {
+      width: 105px;
+      height: 105px;
+      margin: 0 auto 16px auto;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 2px solid #D4AF37;
+      background: #0A101D;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    .logo-img {
+      width: 105px;
+      height: 105px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+    }
+    .title {
+      color: #D4AF37;
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin: 0;
+      line-height: 1.25;
+      text-align: center;
+    }
+    .sub-title {
+      color: #E2E8F0;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 8px;
+      font-weight: 600;
+      opacity: 0.95;
+      text-align: center;
+    }
+    .body-content {
+      padding: 32px 28px;
+    }
+    .salutation {
+      font-size: 16px;
+      font-weight: 700;
+      color: #135846;
+      margin-bottom: 12px;
+    }
+    .intro-text {
+      font-size: 14.5px;
+      color: #374151;
+      line-height: 1.7;
+      margin: 0 0 20px 0;
+    }
+    .ref-box {
+      background: #F4F8F6;
+      border: 2px dashed #135846;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      margin: 24px 0;
+    }
+    .ref-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #718096;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .ref-code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 32px;
+      font-weight: 900;
+      color: #135846;
+      letter-spacing: 4px;
+      margin-top: 4px;
+    }
+    .details-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 22px 0;
+    }
+    .details-table td {
+      padding: 12px 0;
+      border-bottom: 1px solid #E5E7EB;
+      font-size: 14px;
+    }
+    .details-table td.col-label {
+      color: #6B7280;
+      font-weight: 600;
+      width: 40%;
+    }
+    .details-table td.col-val {
+      color: #111827;
+      font-weight: 700;
+      text-align: right;
+    }
+    .total-row td {
+      border-bottom: 2px solid #135846;
+      padding: 14px 0;
+    }
+    .total-row td.col-label {
+      font-size: 15px;
+      font-weight: 800;
+      color: #135846;
+    }
+    .total-row td.col-val {
+      font-size: 18px;
+      font-weight: 800;
+      color: #135846;
+    }
+    .instructions-card {
+      background: #FFFDF9;
+      border-left: 4px solid #D4AF37;
+      padding: 16px;
+      border-radius: 6px;
+      margin: 24px 0 20px 0;
+      font-size: 13.5px;
+      color: #374151;
+      line-height: 1.65;
+    }
+    .signoff {
+      margin-top: 28px;
+      font-size: 14px;
+      color: #4B5563;
+      line-height: 1.6;
+    }
+    .footer {
+      background: #F9FAFB;
+      padding: 22px;
+      text-align: center;
+      font-size: 11.5px;
+      color: #9CA3AF;
+      border-top: 1px solid #E5E7EB;
+      line-height: 1.5;
+    }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="wrapper">
     <div class="header">
-      <h1 class="logo-title">City Star Hotel & Suites</h1>
-      <div class="logo-sub">Maiduguri • Borno State • 5-Star Luxury</div>
+      <!-- Top Center City Star Logo -->
+      <div class="logo-container">
+        <img class="logo-img" src="cid:citystarlogo" alt="City Star Hotel Logo" />
+      </div>
+      <h1 class="title">CITY STAR HOTEL & ACCOMODATION</h1>
+      <div class="sub-title">MAIDUGURI • BORNO STATE •</div>
     </div>
-    <div class="content">
-      <div class="greeting">Warm Northern Greetings, ${data.guestName}!</div>
-      <p style="font-size: 14px; color: #4A5568; line-height: 1.6;">
-        We are honored to confirm your luxury reservation at City Star Hotel & Suites. Your suite has been reserved and our dedicated concierge is preparing for your arrival in the historic city of Maiduguri.
+
+    <div class="body-content">
+      <div class="salutation">Dear ${data.guestName},</div>
+      <p class="intro-text">
+        We are honored to confirm your luxury reservation at City Star restaurants & accomodation. We have reserved your suite and look forward to welcoming you to City Star Hotel
       </p>
 
-      <div class="ref-badge">
-        <div class="ref-label">Your Official Booking Reference</div>
+      <div class="ref-box">
+        <div class="ref-title">YOUR OFFICIAL BOOKING REFERENCE</div>
         <div class="ref-code">${data.bookingReference}</div>
       </div>
 
       <table class="details-table">
         <tr>
-          <td class="label">Suite / Category:</td>
-          <td class="value">${data.roomName}</td>
-        </tr>
-        ${data.roomNumber ? `
-        <tr>
-          <td class="label">Assigned Room:</td>
-          <td class="value">Room ${data.roomNumber} ${data.floor ? `(Floor ${data.floor})` : ''}</td>
-        </tr>
-        ` : ''}
-        <tr>
-          <td class="label">Check-in Date:</td>
-          <td class="value">${data.checkInDate}</td>
+          <td class="col-label">Guest Name:</td>
+          <td class="col-val">${data.guestName}</td>
         </tr>
         <tr>
-          <td class="label">Check-out Date:</td>
-          <td class="value">${data.checkOutDate}</td>
+          <td class="col-label">Phone Number:</td>
+          <td class="col-val">${data.guestPhone || '—'}</td>
         </tr>
         <tr>
-          <td class="label">Duration:</td>
-          <td class="value">${data.totalNights} Night${data.totalNights > 1 ? 's' : ''}</td>
+          <td class="col-label">Suite / Category:</td>
+          <td class="col-val">${roomDisplay}</td>
         </tr>
         <tr>
-          <td class="label">Payment Status:</td>
-          <td class="value" style="color: ${data.paymentStatus === 'paid_at_desk' || data.paymentStatus === 'completed' ? '#135846' : '#D97706'};">
-            ${data.paymentStatus === 'paid_at_desk' ? 'Paid at Front Desk' : data.paymentStatus === 'completed' ? 'Paid & Confirmed' : 'Pending Payment'}
-          </td>
+          <td class="col-label">Status:</td>
+          <td class="col-val" style="color: #135846;">Reservation confirmed</td>
         </tr>
         <tr class="total-row">
-          <td class="label">Total Amount:</td>
-          <td class="value">${formattedAmount}</td>
+          <td class="col-label">Total Amount:</td>
+          <td class="col-val">${formattedAmount}</td>
         </tr>
       </table>
 
-      <div class="instructions">
-        <strong>Important Check-in Instructions:</strong><br/>
-        • Please present your Booking Reference <strong>${data.bookingReference}</strong> and a valid government ID (NIN, Driver's License, or Passport) at the front desk upon check-in.<br/>
-        • Check-in begins at 2:00 PM. Early check-in or VIP airport transfers from Maiduguri International Airport can be requested via our 24/7 concierge.
+      <div class="instructions-card">
+        • You can complete payment via the City Star Mobile App or at the front desk via POS, Cash, or Bank Transfer.
       </div>
 
-      <p style="font-size: 13px; color: #718096; text-align: center; margin-top: 30px;">
-        For inquiries or modifications, contact concierge at <a href="mailto:concierge@citystarhotel.com" style="color: #135846; font-weight: 600;">concierge@citystarhotel.com</a>.
-      </p>
+      <div class="signoff">
+        Warm regards,<br/>
+        <strong style="color: #135846; font-size: 15px;">City Star Hotel & Accomodation</strong><br/>
+        <span style="font-size: 12px; color: #6B7280;">Yerwa / Yerima Road, Maiduguri, Borno State, Nigeria</span>
+      </div>
     </div>
+
     <div class="footer">
-      <strong>City Star Hotel & Suites</strong><br/>
-      Yerwa / Yerima Road, Maiduguri, Borno State, Nigeria<br/>
-      Premier 5-Star Luxury Hospitality in the Kanem-Borno Heart<br/>
-      &copy; 2026 City Star Hotel & Suites. All rights reserved.
+      Premier 5-Star Luxury Hospitality & Fine Dining in the Kanem-Borno Heart<br/>
+      &copy; 2026 City Star Hotel & Accomodation. All rights reserved.
     </div>
   </div>
 </body>
 </html>
     `;
 
+    const plainText = `CITY STAR HOTEL & ACCOMODATION
+MAIDUGURI • BORNO STATE •
+
+Dear ${data.guestName},
+
+We are honored to confirm your luxury reservation at City Star restaurants & accomodation. We have reserved your suite and look forward to welcoming you to City Star Hotel 
+
+YOUR OFFICIAL BOOKING REFERENCE
+${data.bookingReference}
+
+Guest Name:	${data.guestName}
+Phone Number:	${data.guestPhone || '—'}
+Suite / Category:	${roomDisplay}
+Status:	Reservation confirmed
+Total Amount:	${formattedAmount}
+
+• You can complete payment via the City Star Mobile App or at the front desk via POS, Cash, or Bank Transfer.
+
+Warm regards,
+City Star Hotel & Accomodation
+Maiduguri, Borno State, Nigeria`;
+
     return this.sendMail({
       to: data.guestEmail,
-      subject: `Reservation Confirmed: ${data.bookingReference} - City Star Hotel & Suites Maiduguri`,
+      subject: `Reservation Confirmed: ${data.bookingReference} - City Star Hotel & Accomodation`,
       html: htmlContent,
-      text: `Warm greetings ${data.guestName}!\n\nYour reservation at City Star Hotel & Suites is confirmed.\nBooking Reference: ${data.bookingReference}\nRoom: ${data.roomName}\nDates: ${data.checkInDate} to ${data.checkOutDate} (${data.totalNights} nights)\nTotal: ${formattedAmount}\n\nPresent this code at check-in.\nYerwa Road, Maiduguri, Borno State.`,
+      text: plainText,
+      attachments,
     });
   }
 
@@ -326,11 +516,17 @@ class EmailService {
   /**
    * Internal generic mail dispatcher
    */
-  private async sendMail(options: { to: string; subject: string; html: string; text: string }): Promise<boolean> {
+  private async sendMail(options: {
+    to: string;
+    subject: string;
+    html: string;
+    text: string;
+    attachments?: Array<{ filename: string; path?: string; content?: string | Buffer; cid?: string; contentType?: string }>;
+  }): Promise<boolean> {
     // Ensure transporter is loaded (via env or DB fallback)
     await this.ensureTransporter();
 
-    const from = this.fromAddress || env.SMTP_FROM || '"City Star Hotel & Suites" <madambashir2@gmail.com>';
+    const from = this.fromAddress || env.SMTP_FROM || '"City Star Hotel & Accomodation" <madambashir2@gmail.com>';
 
     if (!this.isConfigured) {
       console.log(`\n================== [EMAIL SIMULATION LOG] ==================`);
@@ -345,13 +541,22 @@ class EmailService {
     // 1. Primary: Resend Official SDK
     if (this.provider === 'resend' && this.resendClient) {
       try {
-        const { data, error } = await this.resendClient.emails.send({
+        const resendPayload: any = {
           from,
           to: [options.to],
           subject: options.subject,
           html: options.html,
           text: options.text,
-        });
+        };
+
+        if (options.attachments && options.attachments.length > 0) {
+          resendPayload.attachments = options.attachments.map((att) => ({
+            filename: att.filename,
+            content: att.path ? fs.readFileSync(att.path) : att.content,
+          }));
+        }
+
+        const { data, error } = await this.resendClient.emails.send(resendPayload);
 
         if (error) {
           console.error('[EmailService - Resend Error]:', error);
@@ -369,13 +574,19 @@ class EmailService {
     // 2. Secondary: SMTP Transporter (Nodemailer)
     if (this.provider === 'smtp' && this.transporter) {
       try {
-        const info = await this.transporter.sendMail({
+        const mailOptions: any = {
           from,
           to: options.to,
           subject: options.subject,
           text: options.text,
           html: options.html,
-        });
+        };
+
+        if (options.attachments && options.attachments.length > 0) {
+          mailOptions.attachments = options.attachments;
+        }
+
+        const info = await this.transporter.sendMail(mailOptions);
 
         console.log(`[EmailService - SMTP] Email successfully sent to ${options.to}. MessageId: ${info.messageId}`);
         return true;
