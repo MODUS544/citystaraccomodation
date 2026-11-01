@@ -1542,8 +1542,8 @@ export default function BrandingCMSPage() {
                 onChange={(e) => setLogoState({ ...logoState, url: e.target.value })}
                 className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-hotel-gold font-mono"
               />
-              <div className="flex gap-2">
-                <label className="py-1.5 px-3 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-colors">
+              <div className="flex items-center gap-2">
+                <label className="py-2 px-4 rounded-xl bg-hotel-gold/15 hover:bg-hotel-gold/25 border border-hotel-gold/30 text-hotel-gold text-xs font-semibold cursor-pointer flex items-center gap-2 transition-all active:scale-95">
                   <Upload className="w-3.5 h-3.5 text-hotel-gold" />
                   <span>Upload Logo File</span>
                   <input
@@ -1551,18 +1551,19 @@ export default function BrandingCMSPage() {
                     accept="image/*"
                     className="hidden"
                     onChange={(e) =>
-                      handleFileUpload(e, 'logos', (url) => setLogoState({ ...logoState, url }), 'logo')
+                      handleFileUpload(
+                        e,
+                        'logos',
+                        (url) => {
+                          const updated = { ...logoState, url };
+                          setLogoState(updated);
+                          saveSettingMutation.mutate({ key: 'brand_logo', value: updated });
+                        },
+                        'logo'
+                      )
                     }
                   />
                 </label>
-                {logoState.url && (
-                  <button
-                    onClick={() => setLogoState({ ...logoState, url: '' })}
-                    className="py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold transition-colors"
-                  >
-                    Reset to Default Crest
-                  </button>
-                )}
               </div>
             </div>
           </div>
