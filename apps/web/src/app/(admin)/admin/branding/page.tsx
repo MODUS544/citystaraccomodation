@@ -1170,15 +1170,15 @@ export default function BrandingCMSPage() {
             </button>
           </div>
 
-          {/* Live Official Reservation Slip Preview */}
+          {/* Live Reservation Slip Preview */}
           <div className="pt-8 border-t border-white/10">
             <div className="mb-4">
               <span className="text-[10px] uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
-                Official Reservation Slip Preview
+                Reservation Slip Preview
               </span>
-              <h3 className="font-serif text-xl font-bold text-white">Live Official Reservation Slip Format</h3>
+              <h3 className="font-serif text-xl font-bold text-white">Live Reservation Slip Format</h3>
               <p className="text-gray-400 text-xs font-light">
-                Matches the exact official reservation slip given to guests online with official app payment instructions.
+                Matches the exact reservation slip given to guests online with official app payment instructions.
               </p>
             </div>
 
@@ -1188,14 +1188,12 @@ export default function BrandingCMSPage() {
                   receiptNo: 'CH.TXOOQ (Sample)',
                   date: 'Oct 27, 2026',
                   guestName: 'Abdullahi Musa (Sample)',
-                  roomNo: '204',
                   nights: 2,
                   roomRate: 50000,
                   accommodationTotal: 100000,
                   totalAmount: 100000,
                   paymentStatus: 'CONFIRMED',
                   logoUrl: logoState.url || undefined,
-                  watermarkNote: 'OFFICIAL SAMPLE — RESERVATION SLIP',
                 }}
                 showActions={true}
               />
