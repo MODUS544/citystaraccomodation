@@ -28,10 +28,10 @@ export const metadata: Metadata = {
     siteName: 'City Star Hotel',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=1200&q=80',
+        url: '/hero-main.jpg',
         width: 1200,
         height: 630,
-        alt: 'City Star Hotel Skyline',
+        alt: 'City Star Hotel & Accomodation Maiduguri',
       },
     ],
     locale: 'en_US',

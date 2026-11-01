@@ -43,14 +43,15 @@ export function HeroSearch() {
   };
 
   const bgImage =
-    hero?.image_url ||
-    'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000&q=85';
+    hero?.image_url && !hero.image_url.includes('unsplash.com')
+      ? hero.image_url
+      : '/hero-main.jpg';
 
   return (
     <section className="relative min-h-[92vh] flex items-center justify-center pt-24 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Background Image with Dark & Gold Gradients */}
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 transition-all duration-1000"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105"
         style={{
           backgroundImage: `url('${bgImage}')`,
         }}

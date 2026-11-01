@@ -86,10 +86,10 @@ export default function BrandingCMSPage() {
   // Local Form States
   // 1. Hero
   const [heroState, setHeroState] = useState<HeroBannerSetting>({
-    image_url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=2000&q=85',
-    headline: 'Maiduguri’s Premier 5-Star Peace & Elegance',
+    image_url: '/hero-main.jpg',
+    headline: 'Feels Like Home, Service Like Royalty.',
     subheadline: 'Immerse yourself in bespoke Northern hospitality, panoramic views of the historic Kanem-Borno landscape, and world-class Kanuri & international culinary masterpieces in the heart of Maiduguri.',
-    badge_text: 'Maiduguri’s Premier 5-Star Sanctuary',
+    badge_text: 'CITY STAR RESTAURANTS & ACCOMODATION',
     cta_text: 'Check Availability',
   });
 
@@ -108,9 +108,9 @@ export default function BrandingCMSPage() {
   // 4. Borno Story
   const [storyState, setStoryState] = useState<ExperienceStorySetting>({
     subtitle: 'The Heritage & Standard',
-    title: 'Where Timeless Borno Splendor Meets Modern Luxury',
+    title: 'Where Northern Tradition Meets Modern Distinction.',
     description: 'Conceived as a tribute to Northern hospitality and modern elegance, City Star Hotel offers an intuitive retreat for global tastemakers, government dignitaries, NGO executives, and discerning travelers.',
-    image_url: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80',
+    image_url: '/experience-story.jpg',
     image_badge: 'Bespoke Experience',
     image_title: 'Skyline Presidential & Royal Living',
     stats: [

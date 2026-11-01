@@ -114,7 +114,7 @@ export default function HomePage() {
             <div className="relative">
               <div className="relative h-[480px] sm:h-[550px] rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
                 <Image
-                  src={story?.image_url || 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?auto=format&fit=crop&w=1200&q=80'}
+                  src={story?.image_url || '/experience-story.jpg'}
                   alt="City Star Luxury Suite"
                   fill
                   className="object-cover"

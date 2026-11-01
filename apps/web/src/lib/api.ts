@@ -560,15 +560,41 @@ export async function updateRoomStatus(
 // GLOBAL SITE CONTENT & MEDIA CMS API (Super Admin)
 // ---------------------------------------------------------------------------
 
+const FALLBACK_PUBLIC_SETTINGS: SiteSettings = {
+  hero_banner: {
+    image_url: '/hero-main.jpg',
+    headline: 'Feels Like Home, Service Like Royalty.',
+    subheadline: 'Immerse yourself in bespoke Northern hospitality, panoramic views of the historic Kanem-Borno landscape, and world-class Kanuri & international culinary masterpieces in the heart of Maiduguri.',
+    badge_text: 'CITY STAR RESTAURANTS & ACCOMODATION',
+    cta_text: 'Check Availability',
+  },
+  experience_story: {
+    subtitle: 'The Heritage & Standard',
+    title: 'Where Northern Tradition Meets Modern Distinction.',
+    description: 'Conceived as a tribute to Northern hospitality and modern elegance, City Star Hotel offers an intuitive retreat for global tastemakers, government dignitaries, NGO executives, and discerning travelers.',
+    image_url: '/experience-story.jpg',
+  },
+};
+
 export async function fetchPublicSettings(): Promise<SiteSettings> {
   try {
     const res = await fetch(`${API_BASE_URL}/settings/public`, { cache: 'no-store' });
     if (!res.ok) throw new Error('Failed to fetch public settings');
     const json = await res.json();
-    return json.success && json.data ? json.data : {};
+    if (json.success && json.data) {
+      const data = json.data;
+      if (data.hero_banner && (!data.hero_banner.image_url || data.hero_banner.image_url.includes('unsplash.com'))) {
+        data.hero_banner.image_url = '/hero-main.jpg';
+      }
+      if (data.experience_story && (!data.experience_story.image_url || data.experience_story.image_url.includes('unsplash.com'))) {
+        data.experience_story.image_url = '/experience-story.jpg';
+      }
+      return data;
+    }
+    return FALLBACK_PUBLIC_SETTINGS;
   } catch (err) {
     console.warn('Public settings fetch notice:', err);
-    return {};
+    return FALLBACK_PUBLIC_SETTINGS;
   }
 }
 
