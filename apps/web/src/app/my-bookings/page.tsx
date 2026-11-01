@@ -38,7 +38,7 @@ export default function MyBookingsPage() {
           Guest Portal
         </span>
         <h1 className="font-serif text-3xl sm:text-5xl font-bold text-white mb-3">
-          Manage Your Reservation
+          Manage My Bookings
         </h1>
         <p className="text-gray-400 text-sm font-light max-w-md mx-auto">
           Enter your unique booking reference number (e.g. CH.MAVBU) to view reservation details.

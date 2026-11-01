@@ -310,7 +310,7 @@ export function BookingModal({
                 onClick={onClose}
                 className="flex-1 py-3 px-4 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-semibold text-center text-white transition-all"
               >
-                View My Bookings
+                Manage My Bookings
               </Link>
               <button
                 onClick={onClose}

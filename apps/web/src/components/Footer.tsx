@@ -82,7 +82,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/my-bookings" className="hover:text-white transition-colors">
-                  Guest Reservation Portal
+                  Manage My Bookings
                 </Link>
               </li>
               <li>

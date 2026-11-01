@@ -89,7 +89,7 @@ export function Navbar() {
             className="text-gray-300 hover:text-hotel-gold transition-colors flex items-center gap-1.5 whitespace-nowrap"
           >
             <Calendar className="w-4 h-4 text-hotel-gold" />
-            My Bookings
+            Manage My Bookings
           </Link>
           <Link
             href="/login"
@@ -147,7 +147,7 @@ export function Navbar() {
             className="flex items-center gap-2 text-gray-200 hover:text-hotel-gold font-medium text-base py-1"
           >
             <Calendar className="w-4 h-4 text-hotel-gold" />
-            My Bookings
+            Manage My Bookings
           </Link>
           <Link
             href="/login"
