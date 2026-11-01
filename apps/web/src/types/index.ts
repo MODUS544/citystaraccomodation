@@ -149,6 +149,12 @@ export interface ContactInfoSetting {
   social_links?: Record<string, string>;
 }
 
+export interface SuitesHeaderSetting {
+  subtitle?: string;
+  title?: string;
+  description?: string;
+}
+
 export interface SiteSettings {
   brand_logo?: BrandLogoSetting;
   hero_banner?: HeroBannerSetting;
@@ -158,6 +164,7 @@ export interface SiteSettings {
   hotel_gallery?: { images?: GalleryImageSetting[] } | GalleryImageSetting[];
   testimonials_section?: TestimonialsSectionSetting;
   contact_info?: ContactInfoSetting;
+  suites_header?: SuitesHeaderSetting;
 }
 
 // Front Desk Walk-In Types

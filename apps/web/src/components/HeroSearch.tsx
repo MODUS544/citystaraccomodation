@@ -92,10 +92,16 @@ export function HeroSearch() {
         <div className="bg-[#0F1626]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-4 sm:p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)]">
           <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-left">
             {/* Check-In */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 focus-within:border-hotel-gold transition-colors">
-              <label className="block text-[11px] uppercase tracking-wider text-hotel-gold font-semibold mb-1 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-hotel-gold" />
-                Check-In Date
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 focus-within:border-hotel-gold transition-colors animate-attention-shake hover:animate-none focus-within:animate-none relative group">
+              <label className="block text-[11px] uppercase tracking-wider text-hotel-gold font-semibold mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-hotel-gold" />
+                  Check-In Date
+                </span>
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded-full border border-amber-400/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  Select
+                </span>
               </label>
               <input
                 type="date"
@@ -103,15 +109,21 @@ export function HeroSearch() {
                 min={formatDateForInput(today)}
                 onChange={(e) => setCheckIn(e.target.value)}
                 required
-                className="w-full bg-transparent text-white text-sm font-medium focus:outline-none [color-scheme:dark]"
+                className="w-full bg-transparent text-white text-sm font-medium focus:outline-none [color-scheme:dark] cursor-pointer"
               />
             </div>
 
             {/* Check-Out */}
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 focus-within:border-hotel-gold transition-colors">
-              <label className="block text-[11px] uppercase tracking-wider text-hotel-gold font-semibold mb-1 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-hotel-gold" />
-                Check-Out Date
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 focus-within:border-hotel-gold transition-colors animate-attention-shake-delayed hover:animate-none focus-within:animate-none relative group">
+              <label className="block text-[11px] uppercase tracking-wider text-hotel-gold font-semibold mb-1 flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-hotel-gold" />
+                  Check-Out Date
+                </span>
+                <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded-full border border-amber-400/30">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                  Select
+                </span>
               </label>
               <input
                 type="date"
@@ -119,7 +131,7 @@ export function HeroSearch() {
                 min={checkIn || formatDateForInput(today)}
                 onChange={(e) => setCheckOut(e.target.value)}
                 required
-                className="w-full bg-transparent text-white text-sm font-medium focus:outline-none [color-scheme:dark]"
+                className="w-full bg-transparent text-white text-sm font-medium focus:outline-none [color-scheme:dark] cursor-pointer"
               />
             </div>
 

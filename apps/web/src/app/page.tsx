@@ -42,9 +42,7 @@ export default function HomePage() {
   });
 
   const story = siteSettings?.experience_story;
-  const accolades = (siteSettings?.accolades && siteSettings.accolades.length > 0)
-    ? siteSettings.accolades
-    : DEFAULT_ACCOLADES;
+  const suitesHeader = (siteSettings as any)?.suites_header;
 
   const handleSelectRoom = (room: RoomType) => {
     setSelectedRoom(room);
@@ -56,32 +54,18 @@ export default function HomePage() {
       {/* Hero Section with Live Availability Search */}
       <HeroSearch />
 
-      {/* Trust & Accreditations Banner */}
-      <section className="border-y border-white/10 bg-[#0A101D] py-6 px-4">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-around gap-6 text-xs uppercase tracking-widest text-gray-300 font-semibold">
-          {accolades.map((acc, i) => {
-            const Icon = (acc.icon && ACCOLADE_ICONS[acc.icon]) || Award;
-            return (
-              <div key={i} className="flex items-center gap-2.5">
-                <Icon className="w-4 h-4 text-hotel-gold flex-shrink-0" />
-                <span className="tracking-wider">{acc.title}</span>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
       {/* Featured Suites & Accommodations Section */}
       <section id="rooms" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-2">
-            Sanctuaries of Rest
+            {suitesHeader?.subtitle || 'SANCTUARIES OF REST'}
           </span>
           <h2 className="font-serif text-3xl sm:text-5xl font-bold text-white mb-4">
-            Bespoke Suites & Cultural Residencies
+            {suitesHeader?.title || 'Bespoke Suites & Cultural Residencies'}
           </h2>
           <p className="text-gray-400 text-sm sm:text-base font-light">
-            Each suite combines bespoke Italian furnishings, hand-carved Kanuri geometric woodwork, marble en-suites, and floor-to-ceiling vistas designed for absolute luxury and tranquility.
+            {suitesHeader?.description ||
+              'Each suite combines bespoke Italian furnishings, hand-carved Kanuri geometric woodwork, marble en-suites, and floor-to-ceiling vistas designed for absolute luxury and tranquility.'}
           </p>
         </div>
 

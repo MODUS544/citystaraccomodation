@@ -17,10 +17,10 @@ export interface PaymentReceiptData {
   restaurantCharges?: number;
   serviceCharge?: number;
   totalAmount: number;
-  amountPaid: number;
+  amountPaid?: number;
   balanceDue?: number;
   paymentMethod?: string;
-  paymentStatus?: 'PAID' | 'PENDING' | 'SETTLED';
+  paymentStatus?: 'PAID' | 'PENDING' | 'SETTLED' | 'CONFIRMED' | string;
   watermarkNote?: string;
   logoUrl?: string;
 }
@@ -88,8 +88,8 @@ export function PaymentReceipt({
           <p className="text-xs sm:text-sm text-gray-500 font-normal">
             Maiduguri, Borno State, Nigeria
           </p>
-          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-gray-900 pt-0.5">
-            GUEST PAYMENT RECEIPT
+          <p className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[#135846] pt-0.5">
+            OFFICIAL RESERVATION SLIP / RECEIPT
           </p>
         </div>
 
@@ -99,8 +99,8 @@ export function PaymentReceipt({
         {/* 2. Key-Value Metadata Grid */}
         <div className="space-y-3 text-sm">
           <div className="flex justify-between items-center">
-            <span className="text-gray-500">Receipt No.</span>
-            <span className="font-bold text-gray-950 tracking-tight">
+            <span className="text-gray-500">Booking Reference</span>
+            <span className="font-bold text-[#135846] font-mono tracking-wider text-base">
               {receipt.receiptNo}
             </span>
           </div>
@@ -116,15 +116,15 @@ export function PaymentReceipt({
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-gray-500">Room No.</span>
-            <span className="text-gray-900 font-normal">
-              {receipt.roomNo || '204'}
+            <span className="text-gray-500">Room / Key No.</span>
+            <span className="text-gray-900 font-medium">
+              {receipt.roomNo || 'Assigned on arrival'}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className="text-gray-500">Stay</span>
-            <span className="text-gray-900 font-normal">
+            <span className="text-gray-500">Stay Duration</span>
+            <span className="text-gray-900 font-medium">
               {nights} night{nights > 1 ? 's' : ''}
             </span>
           </div>
@@ -147,10 +147,10 @@ export function PaymentReceipt({
             <div className="py-2.5 flex justify-between items-start gap-4">
               <div>
                 <span className="text-gray-900 font-normal block leading-tight">
-                  Room accommodation ({nights} × {formatCurrency(roomRate)})
+                  Suite Accommodation ({nights} × {formatCurrency(roomRate)})
                 </span>
                 {receipt.roomName && (
-                  <span className="text-xs text-gray-500 block mt-0.5">
+                  <span className="text-xs text-gray-500 block mt-0.5 font-medium">
                     {receipt.roomName}
                   </span>
                 )}
@@ -159,60 +159,46 @@ export function PaymentReceipt({
                 {formatCurrency(accommodationTotal)}
               </span>
             </div>
-
-            {/* Restaurant charges row */}
-            {restaurantCharges > 0 && (
-              <div className="py-2.5 flex justify-between items-center">
-                <span className="text-gray-900 font-normal">Restaurant charges</span>
-                <span className="font-normal text-gray-950 text-right">
-                  {formatCurrency(restaurantCharges)}
-                </span>
-              </div>
-            )}
           </div>
 
           {/* Total Breakdown */}
           <div className="border-t border-gray-200 mt-2 pt-3 space-y-2 text-sm">
             <div className="flex justify-between items-center font-bold text-black text-base">
-              <span>Total</span>
-              <span>{formatCurrency(totalAmount)}</span>
-            </div>
-
-            <div className="flex justify-between items-center text-gray-900">
-              <span>Amount paid</span>
-              <span className="font-normal text-black">
-                {formatCurrency(amountPaid)}
-              </span>
-            </div>
-
-            <div className="flex justify-between items-center text-gray-900">
-              <span>Balance due</span>
-              <span className="font-normal text-black">
-                {formatCurrency(balanceDue)}
-              </span>
+              <span>Total Amount</span>
+              <span className="font-serif text-lg text-[#135846]">{formatCurrency(totalAmount)}</span>
             </div>
           </div>
         </div>
 
-        {/* 4. Payment Status Section */}
+        {/* 4. Payment & Mobile App Notice Section */}
         <div className="mt-5 pt-4 border-t border-gray-200">
           <div className="flex items-start gap-3">
             <div className="w-5 h-5 rounded-full border-2 border-[#16A34A] flex items-center justify-center flex-shrink-0 mt-0.5">
               <Check className="w-3.5 h-3.5 text-[#16A34A] stroke-[3]" />
             </div>
             <div>
-              <div className="font-bold text-sm sm:text-base text-black">
-                Payment status: {receipt.paymentStatus || 'PAID'}
+              <div className="font-bold text-sm sm:text-base text-gray-950">
+                Reservation Confirmed • Pending App Payment
               </div>
-              <div className="text-xs sm:text-sm text-gray-500 mt-0.5">
-                Payment method: {formattedPaymentMethod}
+              <div className="text-xs text-gray-500 mt-0.5">
+                Suite held under Booking Reference #{receipt.receiptNo}
               </div>
             </div>
           </div>
 
+          {/* Mobile App Official Payment Instruction Box */}
+          <div className="mt-3.5 p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs leading-relaxed space-y-1">
+            <div className="font-bold text-amber-950 flex items-center gap-1.5">
+              <span>📱 Official Mobile App Payment Notice</span>
+            </div>
+            <p className="text-[11.5px] text-amber-900">
+              Please complete payment via the official <strong>City Star Mobile App</strong> on the <strong>Apple App Store</strong> or <strong>Google Play Store</strong>. No direct bank transfers accepted for website bookings.
+            </p>
+          </div>
+
           {/* Footnote watermark */}
-          <div className="text-center text-[10px] tracking-wider uppercase text-gray-400 mt-6 pt-3 border-t border-dashed border-gray-200 font-medium">
-            {receipt.watermarkNote || 'OFFICIAL PAYMENT RECEIPT — CITY STAR HOTEL MAIDUGURI'}
+          <div className="text-center text-[10px] tracking-wider uppercase text-gray-400 mt-5 pt-3 border-t border-dashed border-gray-200 font-medium">
+            {receipt.watermarkNote || 'OFFICIAL RESERVATION SLIP — CITY STAR RESTAURANTS & ACCOMODATION MAIDUGURI'}
           </div>
         </div>
       </div>
@@ -226,7 +212,7 @@ export function PaymentReceipt({
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-semibold flex items-center justify-center gap-2 transition-colors shadow-lg"
           >
             <Printer className="w-4 h-4 text-hotel-gold" />
-            <span>Print Receipt</span>
+            <span>Print Reservation Slip</span>
           </button>
 
           {onClose && (

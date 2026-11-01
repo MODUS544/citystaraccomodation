@@ -46,29 +46,18 @@ import {
 import {
   BrandLogoSetting,
   HeroBannerSetting,
-  AccoladeItem,
   ExperienceStorySetting,
   AmenitiesSectionSetting,
-  GalleryImageSetting,
-  TestimonialsSectionSetting,
   ContactInfoSetting,
   RoomType,
+  SuitesHeaderSetting,
 } from '../../../../types';
 import { PaymentReceipt } from '../../../../components/PaymentReceipt';
-
-const GALLERY_CATEGORIES = [
-  { id: 'suites', label: 'Suites & Penthouses' },
-  { id: 'dining', label: 'Culinary & Lounge' },
-  { id: 'pool', label: 'Skyline Pool & Spa' },
-  { id: 'lobby', label: 'Grand Royal Lobby' },
-  { id: 'security', label: 'VIP Security & Fleet' },
-  { id: 'general', label: 'General Architecture' },
-];
 
 export default function BrandingCMSPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<
-    'hero' | 'accolades' | 'suites' | 'story' | 'amenities' | 'gallery' | 'testimonials' | 'logo' | 'contact'
+    'hero' | 'suites' | 'story' | 'amenities' | 'logo' | 'contact'
   >('hero');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -93,15 +82,15 @@ export default function BrandingCMSPage() {
     cta_text: 'Check Availability',
   });
 
-  // 2. Accolades
-  const [accoladesState, setAccoladesState] = useState<AccoladeItem[]>([
-    { icon: 'Award', title: 'West African Luxury Hospitality Award 2026' },
-    { icon: 'ShieldCheck', title: 'Forbes 5-Star Certified Luxury Resort' },
-    { icon: 'Star', title: 'Royal Kanem Guide Recognized Fine Dining' },
-    { icon: 'Compass', title: 'Prime Maiduguri Metropolitan Location (Secure VIP Zone)' },
-  ]);
+  // Suites Section Header Setting (Admin Editable)
+  const [suitesHeaderState, setSuitesHeaderState] = useState<SuitesHeaderSetting>({
+    subtitle: 'SANCTUARIES OF REST',
+    title: 'Bespoke Suites & Cultural Residencies',
+    description:
+      'Each suite combines bespoke Italian furnishings, hand-carved Kanuri geometric woodwork, marble en-suites, and floor-to-ceiling vistas designed for absolute luxury and tranquility.',
+  });
 
-  // 3. Suites (local editing copy)
+  // 2. Suites (local editing copy)
   const [suitesState, setSuitesState] = useState<RoomType[]>([]);
   const [newSuiteImageUrl, setNewSuiteImageUrl] = useState<Record<string, string>>({});
 
@@ -165,49 +154,7 @@ export default function BrandingCMSPage() {
     ],
   });
 
-  // 6. Showcase Gallery (Every Picture Editable)
-  const [galleryState, setGalleryState] = useState<GalleryImageSetting[]>([]);
-  const [selectedGalleryCategory, setSelectedGalleryCategory] = useState<string>('all');
-  const [newGalleryItem, setNewGalleryItem] = useState<{
-    url: string;
-    caption: string;
-    category: string;
-    is_featured: boolean;
-  }>({
-    url: '',
-    caption: '',
-    category: 'suites',
-    is_featured: false,
-  });
-
-  // 7. Testimonials
-  const [testimonialsState, setTestimonialsState] = useState<TestimonialsSectionSetting>({
-    subtitle: 'Guest Testimonials',
-    title: 'Voices of Prestige',
-    description: 'Reflections from global leaders, diplomats, business executives, and families who call City Star their home in Maiduguri.',
-    items: [
-      {
-        name: 'Engr. Mustapha B.',
-        role: 'Infrastructure Consultant, Abuja',
-        quote: 'The architectural perfection, high-level security, acoustically isolated suites, and attentive concierge made our stay in Borno state truly unforgettable. The Penthouse view over Maiduguri is sheer perfection.',
-        rating: 5,
-      },
-      {
-        name: 'Dr. Claire Dupont',
-        role: 'International Mission Director, Geneva',
-        quote: 'From the seamless airport pickup to the traditional fine dining, every element exudes effortless sophistication. City Star is undeniably our organization’s preferred residence in Borno State.',
-        rating: 5,
-      },
-      {
-        name: 'Alh. Farouk Kyari',
-        role: 'Managing Director, Lagos',
-        quote: 'The high-speed fiber internet, tranquil spa, zero-friction check-in, and top-tier security made for a productive and deeply relaxing business trip.',
-        rating: 5,
-      },
-    ],
-  });
-
-  // 8. Brand Logo
+  // 6. Brand Logo
   const [logoState, setLogoState] = useState<BrandLogoSetting>({
     url: '',
     alt_text: 'City Star Hotel & Suites Logo',
@@ -215,10 +162,10 @@ export default function BrandingCMSPage() {
     tag_line: 'Maiduguri’s Premier 5-Star Peace & Elegance',
   });
 
-  // 9. Contact & Footer
+  // 7. Contact & Footer
   const [contactState, setContactState] = useState<ContactInfoSetting>({
     phone: '+234 906 868 6675',
-    email: 'citystarmaiduguri@gmail.com',
+    email: 'citystarmaiduguri20@gmail.com',
     address: 'City Star Hotel & Restaurant, Yerwa/Yerima Road, Maiduguri, Borno State, Nigeria',
     whatsapp: '+2349068686675',
     brand_name: 'CITY STAR HOTEL & RESTAURANT',
@@ -234,19 +181,9 @@ export default function BrandingCMSPage() {
     if (settings) {
       if (settings.brand_logo) setLogoState((prev) => ({ ...prev, ...settings.brand_logo }));
       if (settings.hero_banner) setHeroState((prev) => ({ ...prev, ...settings.hero_banner }));
-      if (Array.isArray(settings.accolades) && settings.accolades.length > 0) {
-        setAccoladesState(settings.accolades);
-      }
+      if (settings.suites_header) setSuitesHeaderState((prev) => ({ ...prev, ...settings.suites_header }));
       if (settings.experience_story) setStoryState((prev) => ({ ...prev, ...settings.experience_story }));
       if (settings.amenities_section) setAmenitiesState((prev) => ({ ...prev, ...settings.amenities_section }));
-      if (settings.hotel_gallery) {
-        if (Array.isArray(settings.hotel_gallery)) {
-          setGalleryState(settings.hotel_gallery);
-        } else if (Array.isArray(settings.hotel_gallery.images)) {
-          setGalleryState(settings.hotel_gallery.images);
-        }
-      }
-      if (settings.testimonials_section) setTestimonialsState((prev) => ({ ...prev, ...settings.testimonials_section }));
       if (settings.contact_info) setContactState((prev) => ({ ...prev, ...settings.contact_info }));
     }
   }, [settings]);
@@ -300,7 +237,7 @@ export default function BrandingCMSPage() {
   // Generic direct asset uploader
   const handleFileUpload = async (
     e: React.ChangeEvent<HTMLInputElement>,
-    prefix: 'logos' | 'hero' | 'gallery' | 'suites' | 'story',
+    prefix: 'logos' | 'hero' | 'suites' | 'story',
     onSuccess: (url: string) => void,
     key: string
   ) => {
@@ -331,10 +268,6 @@ export default function BrandingCMSPage() {
     }
   };
 
-  const filteredGallery = galleryState.filter((img) =>
-    selectedGalleryCategory === 'all' ? true : img.category === selectedGalleryCategory
-  );
-
   return (
     <div className="space-y-8 pb-16">
       {/* Page Header */}
@@ -347,7 +280,7 @@ export default function BrandingCMSPage() {
             Brand, Media & Content CMS
           </h1>
           <p className="text-[#818E9B] text-xs sm:text-sm font-normal mt-1">
-            Complete editorial control over every photo, text block, suite specification, and accolade on the live website.
+            Complete editorial control over every photo, text block, suite specification, and royal brand assets.
           </p>
         </div>
 
@@ -396,12 +329,9 @@ export default function BrandingCMSPage() {
       <div className="bg-white border border-[#EAEFF4] rounded-2xl p-1.5 flex gap-1 overflow-x-auto shadow-sm [scrollbar-width:none]">
         {[
           { id: 'hero', label: 'Hero & Header', icon: ImageIcon },
-          { id: 'accolades', label: 'Accolades & Distinctions', icon: Award },
           { id: 'suites', label: 'Suites & Pictures', icon: BedDouble },
           { id: 'story', label: 'Borno Heritage & Story', icon: Building },
           { id: 'amenities', label: 'Curated Amenities', icon: Sparkles },
-          { id: 'gallery', label: 'Showcase Gallery (Pictures)', icon: Layers },
-          { id: 'testimonials', label: 'Testimonials', icon: MessageSquare },
           { id: 'logo', label: 'Brand Crest & Identity', icon: Star },
           { id: 'contact', label: 'Location & Footer', icon: MapPin },
         ].map((tab) => {
@@ -560,79 +490,82 @@ export default function BrandingCMSPage() {
         </div>
       )}
 
-      {/* TAB 2: ACCOLADES & DISTINCTIONS */}
-      {activeTab === 'accolades' && (
-        <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-8 shadow-2xl">
-          <div>
-            <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
-              Prestige Bar
-            </span>
-            <h2 className="font-serif text-2xl font-bold text-white">Accolades & Distinctions (Trust Bar)</h2>
-            <p className="text-gray-400 text-xs font-light mt-1">
-              Edit the 4 accreditations displayed prominently beneath the hero section.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {accoladesState.map((acc, index) => (
-              <div key={index} className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                <div className="flex items-center justify-between text-xs text-hotel-gold font-bold">
-                  <span>Accreditation #{index + 1}</span>
-                  <select
-                    value={acc.icon || 'Award'}
-                    onChange={(e) => {
-                      const updated = [...accoladesState];
-                      updated[index].icon = e.target.value;
-                      setAccoladesState(updated);
-                    }}
-                    className="bg-[#0A101D] border border-white/20 text-hotel-gold text-xs rounded-lg px-2 py-1"
-                  >
-                    <option value="Award">🏆 Award</option>
-                    <option value="ShieldCheck">⭐ Shield / Certification</option>
-                    <option value="Star">🍽️ Star / Dining</option>
-                    <option value="Compass">📍 Compass / Location</option>
-                    <option value="MapPin">📌 Map Pin</option>
-                    <option value="Sparkles">✨ Sparkles</option>
-                  </select>
-                </div>
-                <input
-                  type="text"
-                  value={acc.title}
-                  onChange={(e) => {
-                    const updated = [...accoladesState];
-                    updated[index].title = e.target.value;
-                    setAccoladesState(updated);
-                  }}
-                  className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-hotel-gold"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="pt-4 border-t border-white/10 flex justify-end">
-            <button
-              onClick={() => saveSettingMutation.mutate({ key: 'accolades', value: accoladesState })}
-              disabled={saveSettingMutation.isPending}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-hotel-gold to-[#B8972E] text-hotel-dark font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 transition-all"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Accolades Bar</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 3: SUITES & PICTURES (ROOM TYPES & ROOM IMAGES) */}
+      {/* TAB 2: SUITES & PICTURES (ROOM TYPES, HEADER TEXTS & ROOM IMAGES) */}
       {activeTab === 'suites' && (
         <div className="space-y-6">
           <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
             <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
-              Accommodations Inventory
+              Accommodations Inventory & Philosophy
             </span>
             <h2 className="font-serif text-2xl font-bold text-white">Suites, Penthouses & Room Pictures</h2>
             <p className="text-gray-400 text-xs font-light mt-1">
-              Edit each room category’s title, description, nightly rate (₦), amenities, and manage all picture galleries for each suite.
+              Customize the section header texts, edit each room category’s title, description, nightly rate (₦), amenities, and manage all picture galleries for each suite.
             </p>
+          </div>
+
+          {/* Section Header Text Editor (SANCTUARIES OF REST / Bespoke Suites...) */}
+          <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+            <div>
+              <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
+                Suites Section Title & Narrative
+              </span>
+              <h3 className="font-serif text-xl font-bold text-white">Homepage Section Header Texts</h3>
+              <p className="text-gray-400 text-xs font-light mt-1">
+                Customize the subtitle, main heading, and narrative description shown directly above the suite cards on the homepage.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-hotel-gold font-semibold mb-1">
+                  Section Subtitle
+                </label>
+                <input
+                  type="text"
+                  value={suitesHeaderState.subtitle}
+                  onChange={(e) => setSuitesHeaderState({ ...suitesHeaderState, subtitle: e.target.value })}
+                  placeholder="SANCTUARIES OF REST"
+                  className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-hotel-gold"
+                />
+              </div>
+
+              <div>
+                <label className="block text-[11px] uppercase tracking-wider text-hotel-gold font-semibold mb-1">
+                  Section Heading / Title
+                </label>
+                <input
+                  type="text"
+                  value={suitesHeaderState.title}
+                  onChange={(e) => setSuitesHeaderState({ ...suitesHeaderState, title: e.target.value })}
+                  placeholder="Bespoke Suites & Cultural Residencies"
+                  className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-hotel-gold font-serif"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-[11px] uppercase tracking-wider text-hotel-gold font-semibold mb-1">
+                  Narrative Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={suitesHeaderState.description}
+                  onChange={(e) => setSuitesHeaderState({ ...suitesHeaderState, description: e.target.value })}
+                  placeholder="Each suite combines bespoke Italian furnishings, hand-carved Kanuri geometric woodwork, marble en-suites, and floor-to-ceiling vistas designed for absolute luxury and tranquility."
+                  className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-hotel-gold leading-relaxed"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                onClick={() => saveSettingMutation.mutate({ key: 'suites_header', value: suitesHeaderState })}
+                disabled={saveSettingMutation.isPending}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-hotel-gold to-[#B8972E] text-hotel-dark font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 transition-all"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Section Header Texts</span>
+              </button>
+            </div>
           </div>
 
           {suitesState.map((suite, suiteIndex) => (
@@ -1139,377 +1072,7 @@ export default function BrandingCMSPage() {
         </div>
       )}
 
-      {/* TAB 6: SHOWCASE GALLERY (ALL PICTURES EDITABLE & DELETABLE) */}
-      {activeTab === 'gallery' && (
-        <div className="space-y-6">
-          <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-            <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
-              Visual Showcase
-            </span>
-            <h2 className="font-serif text-2xl font-bold text-white">Visual Showcase Gallery Manager</h2>
-            <p className="text-gray-400 text-xs font-light mt-1">
-              Edit any photo in the showcase, upload replacement images, change captions and categories, or delete photos.
-            </p>
-
-            {/* Add New Photo Form */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-4">
-              <span className="text-xs uppercase tracking-wider text-hotel-gold font-bold block">
-                + Add New Picture to Showcase
-              </span>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div className="lg:col-span-2">
-                  <input
-                    type="text"
-                    placeholder="Image URL or upload below..."
-                    value={newGalleryItem.url}
-                    onChange={(e) => setNewGalleryItem({ ...newGalleryItem, url: e.target.value })}
-                    className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-hotel-gold"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Caption (e.g. Shehu Royal Suite)"
-                    value={newGalleryItem.caption}
-                    onChange={(e) => setNewGalleryItem({ ...newGalleryItem, caption: e.target.value })}
-                    className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-hotel-gold"
-                  />
-                </div>
-                <div>
-                  <select
-                    value={newGalleryItem.category}
-                    onChange={(e) => setNewGalleryItem({ ...newGalleryItem, category: e.target.value })}
-                    className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-hotel-gold"
-                  >
-                    {GALLERY_CATEGORIES.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                <label className="flex items-center gap-2 text-xs text-gray-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={newGalleryItem.is_featured}
-                    onChange={(e) => setNewGalleryItem({ ...newGalleryItem, is_featured: e.target.checked })}
-                    className="rounded border-white/20"
-                  />
-                  <span>Mark as Featured in VIP Showcase</span>
-                </label>
-
-                <div className="flex items-center gap-3">
-                  <label className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold cursor-pointer flex items-center gap-1.5 transition-colors">
-                    <Upload className="w-3.5 h-3.5 text-hotel-gold" />
-                    <span>Upload Image File</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={(e) =>
-                        handleFileUpload(
-                          e,
-                          'gallery',
-                          (url) => setNewGalleryItem((prev) => ({ ...prev, url })),
-                          'new-gallery'
-                        )
-                      }
-                    />
-                  </label>
-                  <button
-                    onClick={() => {
-                      if (!newGalleryItem.url) return;
-                      const newItem: GalleryImageSetting = {
-                        id: `gal-${Date.now()}`,
-                        url: newGalleryItem.url,
-                        caption: newGalleryItem.caption || 'City Star Showcase',
-                        category: newGalleryItem.category,
-                        is_featured: newGalleryItem.is_featured,
-                      };
-                      setGalleryState([newItem, ...galleryState]);
-                      setNewGalleryItem({ url: '', caption: '', category: 'suites', is_featured: false });
-                    }}
-                    className="px-4 py-2 rounded-xl bg-hotel-gold text-hotel-dark font-bold text-xs uppercase"
-                  >
-                    Add to Gallery
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Existing Photos Grid */}
-          <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <h3 className="font-serif text-lg font-bold text-white">
-                All Gallery Pictures ({galleryState.length} total)
-              </h3>
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-gray-400">Filter category:</span>
-                <select
-                  value={selectedGalleryCategory}
-                  onChange={(e) => setSelectedGalleryCategory(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 text-hotel-gold"
-                >
-                  <option value="all">All Photos</option>
-                  {GALLERY_CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredGallery.map((img) => (
-                <div key={img.id} className="bg-white/5 border border-white/10 rounded-2xl p-3.5 space-y-3 relative group">
-                  {/* Photo thumbnail */}
-                  <div className="relative h-44 w-full rounded-xl overflow-hidden bg-slate-900">
-                    <Image src={img.url} alt={img.caption || ''} fill unoptimized className="object-cover" />
-                    <button
-                      onClick={() => setGalleryState(galleryState.filter((g) => g.id !== img.id))}
-                      title="Delete Picture"
-                      className="absolute top-2 right-2 p-1.5 rounded-lg bg-red-600/80 hover:bg-red-600 text-white transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    {img.is_featured && (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-hotel-gold text-hotel-dark font-bold text-[10px] uppercase">
-                        Featured
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Edit Caption */}
-                  <div>
-                    <label className="block text-[10px] uppercase text-gray-400 font-semibold mb-0.5">Caption</label>
-                    <input
-                      type="text"
-                      value={img.caption || ''}
-                      onChange={(e) => {
-                        const updated = galleryState.map((g) => (g.id === img.id ? { ...g, caption: e.target.value } : g));
-                        setGalleryState(updated);
-                      }}
-                      className="w-full bg-[#0A101D] border border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-white"
-                    />
-                  </div>
-
-                  {/* Edit URL */}
-                  <div>
-                    <label className="block text-[10px] uppercase text-gray-400 font-semibold mb-0.5">Picture URL</label>
-                    <input
-                      type="text"
-                      value={img.url}
-                      onChange={(e) => {
-                        const updated = galleryState.map((g) => (g.id === img.id ? { ...g, url: e.target.value } : g));
-                        setGalleryState(updated);
-                      }}
-                      className="w-full bg-[#0A101D] border border-white/10 rounded-lg px-2.5 py-1.5 text-[11px] text-white font-mono"
-                    />
-                  </div>
-
-                  {/* Category and replace button */}
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={img.category}
-                      onChange={(e) => {
-                        const updated = galleryState.map((g) => (g.id === img.id ? { ...g, category: e.target.value } : g));
-                        setGalleryState(updated);
-                      }}
-                      className="flex-1 bg-[#0A101D] border border-white/10 rounded-lg px-2 py-1 text-[11px] text-hotel-gold"
-                    >
-                      {GALLERY_CATEGORIES.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.label}
-                        </option>
-                      ))}
-                    </select>
-
-                    <label className="py-1 px-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-medium cursor-pointer flex items-center gap-1 transition-colors">
-                      <Upload className="w-3 h-3 text-hotel-gold" />
-                      <span>{isUploading[`gal-${img.id}`] ? '...' : 'Replace'}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) =>
-                          handleFileUpload(
-                            e,
-                            'gallery',
-                            (url) => {
-                              const updated = galleryState.map((g) => (g.id === img.id ? { ...g, url } : g));
-                              setGalleryState(updated);
-                            },
-                            `gal-${img.id}`
-                          )
-                        }
-                      />
-                    </label>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="pt-4 border-t border-white/10 flex justify-end">
-              <button
-                onClick={() => saveSettingMutation.mutate({ key: 'hotel_gallery', value: galleryState })}
-                disabled={saveSettingMutation.isPending}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-hotel-gold to-[#B8972E] text-hotel-dark font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 transition-all"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save Gallery Changes</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 7: VOICES OF PRESTIGE (TESTIMONIALS) */}
-      {activeTab === 'testimonials' && (
-        <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-8 shadow-2xl">
-          <div>
-            <span className="text-xs uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
-              Social Proof
-            </span>
-            <h2 className="font-serif text-2xl font-bold text-white">Voices of Prestige (Guest Testimonials)</h2>
-            <p className="text-gray-400 text-xs font-light mt-1">
-              Edit the testimonial section subtitle, title, description, and every leader review.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1">
-                Section Subtitle
-              </label>
-              <input
-                type="text"
-                value={testimonialsState.subtitle || ''}
-                onChange={(e) => setTestimonialsState({ ...testimonialsState, subtitle: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-hotel-gold"
-              />
-            </div>
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1">
-                Section Title
-              </label>
-              <input
-                type="text"
-                value={testimonialsState.title || ''}
-                onChange={(e) => setTestimonialsState({ ...testimonialsState, title: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-hotel-gold"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs uppercase tracking-wider text-hotel-gold font-semibold mb-1">
-                Section Description
-              </label>
-              <textarea
-                rows={2}
-                value={testimonialsState.description || ''}
-                onChange={(e) => setTestimonialsState({ ...testimonialsState, description: e.target.value })}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-hotel-gold"
-              />
-            </div>
-          </div>
-
-          {/* Testimonial Cards */}
-          <div className="space-y-4 pt-4 border-t border-white/10">
-            {(testimonialsState.items || []).map((t, idx) => (
-              <div key={idx} className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3 relative">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs uppercase tracking-wider text-hotel-gold font-bold">
-                    Testimonial #{idx + 1}
-                  </span>
-                  <button
-                    onClick={() => {
-                      const updated = [...(testimonialsState.items || [])];
-                      updated.splice(idx, 1);
-                      setTestimonialsState({ ...testimonialsState, items: updated });
-                    }}
-                    className="p-1 rounded-lg text-gray-400 hover:text-red-400 transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    placeholder="Guest Name (e.g. Engr. Mustapha B.)"
-                    value={t.name}
-                    onChange={(e) => {
-                      const updated = [...(testimonialsState.items || [])];
-                      updated[idx].name = e.target.value;
-                      setTestimonialsState({ ...testimonialsState, items: updated });
-                    }}
-                    className="bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-hotel-gold"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Role / Organization (e.g. Infrastructure Consultant, Abuja)"
-                    value={t.role}
-                    onChange={(e) => {
-                      const updated = [...(testimonialsState.items || [])];
-                      updated[idx].role = e.target.value;
-                      setTestimonialsState({ ...testimonialsState, items: updated });
-                    }}
-                    className="bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs text-hotel-gold focus:outline-none focus:border-hotel-gold"
-                  />
-                </div>
-
-                <textarea
-                  rows={2}
-                  placeholder="Quote text..."
-                  value={t.quote}
-                  onChange={(e) => {
-                    const updated = [...(testimonialsState.items || [])];
-                    updated[idx].quote = e.target.value;
-                    setTestimonialsState({ ...testimonialsState, items: updated });
-                  }}
-                  className="w-full bg-[#0A101D] border border-white/10 rounded-xl px-3 py-2 text-xs text-gray-200 focus:outline-none focus:border-hotel-gold leading-relaxed"
-                />
-              </div>
-            ))}
-
-            <button
-              onClick={() => {
-                const newItem = {
-                  name: 'Dignitary / Guest',
-                  role: 'Executive, Abuja',
-                  quote: 'Exceptional hospitality and peaceful ambiance in the heart of Maiduguri.',
-                  rating: 5,
-                };
-                setTestimonialsState({
-                  ...testimonialsState,
-                  items: [...(testimonialsState.items || []), newItem],
-                });
-              }}
-              className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold text-hotel-gold flex items-center gap-1.5 transition-colors"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add New Testimonial</span>
-            </button>
-          </div>
-
-          <div className="pt-4 border-t border-white/10 flex justify-end">
-            <button
-              onClick={() => saveSettingMutation.mutate({ key: 'testimonials_section', value: testimonialsState })}
-              disabled={saveSettingMutation.isPending}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-hotel-gold to-[#B8972E] text-hotel-dark font-bold text-xs uppercase tracking-wider hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] disabled:opacity-50 transition-all"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Testimonials</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 8: BRAND CREST & IDENTITY */}
+      {/* TAB 5: BRAND CREST & IDENTITY */}
       {activeTab === 'logo' && (
         <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-8 shadow-2xl">
           <div>
@@ -1607,36 +1170,32 @@ export default function BrandingCMSPage() {
             </button>
           </div>
 
-          {/* Live Payment Receipt Preview */}
+          {/* Live Official Reservation Slip Preview */}
           <div className="pt-8 border-t border-white/10">
             <div className="mb-4">
               <span className="text-[10px] uppercase tracking-[0.25em] text-hotel-gold font-semibold block mb-1">
-                Official Receipt Preview
+                Official Reservation Slip Preview
               </span>
-              <h3 className="font-serif text-xl font-bold text-white">Live Payment Receipt Format</h3>
+              <h3 className="font-serif text-xl font-bold text-white">Live Official Reservation Slip Format</h3>
               <p className="text-gray-400 text-xs font-light">
-                Matches the exact official receipt given to guests online, at front-desk walk-in checkout, and on key card issuance.
+                Matches the exact official reservation slip given to guests online with official app payment instructions.
               </p>
             </div>
 
             <div className="p-6 rounded-2xl bg-black/40 border border-white/10 flex justify-center">
               <PaymentReceipt
                 receipt={{
-                  receiptNo: 'CH.MAVBU (Sample)',
-                  date: '2026-10-27',
+                  receiptNo: 'CH.TXOOQ (Sample)',
+                  date: 'Oct 27, 2026',
                   guestName: 'Abdullahi Musa (Sample)',
                   roomNo: '204',
                   nights: 2,
                   roomRate: 50000,
                   accommodationTotal: 100000,
-                  restaurantCharges: 12000,
-                  totalAmount: 112000,
-                  amountPaid: 112000,
-                  balanceDue: 0,
-                  paymentMethod: 'Bank transfer (sample)',
-                  paymentStatus: 'PAID',
+                  totalAmount: 100000,
+                  paymentStatus: 'CONFIRMED',
                   logoUrl: logoState.url || undefined,
-                  watermarkNote: 'ILLUSTRATIVE SAMPLE — NOT A VALID PAYMENT RECEIPT',
+                  watermarkNote: 'OFFICIAL SAMPLE — RESERVATION SLIP',
                 }}
                 showActions={true}
               />
@@ -1645,7 +1204,7 @@ export default function BrandingCMSPage() {
         </div>
       )}
 
-      {/* TAB 9: LOCATION, CONTACT & FOOTER */}
+      {/* TAB 6: LOCATION, CONTACT & FOOTER */}
       {activeTab === 'contact' && (
         <div className="bg-[#0F1626] border border-white/10 rounded-3xl p-6 sm:p-8 space-y-8 shadow-2xl">
           <div>
