@@ -17,6 +17,7 @@ import {
   Printer,
   Loader2,
   FileText,
+  Mail,
 } from 'lucide-react';
 import { fetchAdminBookings, updateBookingStatus, AdminActionBooking } from '../../../../lib/api';
 import { formatCurrency, formatDate } from '../../../../lib/utils';
@@ -33,6 +34,62 @@ export default function BookingsManagementPage() {
   const [selectedReceiptBooking, setSelectedReceiptBooking] = useState<AdminActionBooking | null>(null);
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [selectedRowIds, setSelectedRowIds] = useState<string[]>([]);
+  const [sendingEmailId, setSendingEmailId] = useState<string | null>(null);
+
+  const handleSendEmail = async (booking: AdminActionBooking) => {
+    const targetEmail = (booking.guest_email || '').trim();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      setNotification({
+        type: 'error',
+        message: `No email address on file for ${booking.guest_name || 'this guest'}.`,
+      });
+      setTimeout(() => setNotification(null), 3500);
+      return;
+    }
+
+    setSendingEmailId(booking.id);
+    try {
+      const res = await fetch('/api/send-reservation-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookingReference: booking.booking_reference,
+          guestName: booking.guest_name || 'Valued Guest',
+          guestEmail: targetEmail,
+          guestPhone: booking.guest_phone || '—',
+          roomName: booking.room_type_name || 'Luxury Suite',
+          roomNumber: booking.room_number || undefined,
+          checkInDate: booking.check_in_date,
+          checkOutDate: booking.check_out_date,
+          totalNights: booking.total_nights || (booking as any).nights || 1,
+          totalAmount: booking.total_amount,
+          paymentStatus: (booking as any).payment_status || 'Reservation confirmed',
+          specialRequests: (booking as any).special_requests || undefined,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setNotification({
+          type: 'success',
+          message: `Official luxury confirmation email sent to ${targetEmail}!`,
+        });
+      } else {
+        setNotification({
+          type: 'error',
+          message: json.error || 'Failed to deliver confirmation email.',
+        });
+      }
+    } catch (err: any) {
+      setNotification({
+        type: 'error',
+        message: err.message || 'Error communicating with email service.',
+      });
+    } finally {
+      setSendingEmailId(null);
+      setTimeout(() => setNotification(null), 4000);
+    }
+  };
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['admin-bookings', page, status, search, startDate, endDate],
@@ -367,6 +424,21 @@ export default function BookingsManagementPage() {
                             className="p-1.5 rounded-xl border border-[#EAEFF4] hover:border-[#135846] text-gray-500 hover:text-[#135846] hover:bg-[#EBF7F2] transition-colors"
                           >
                             <Printer className="w-3.5 h-3.5" />
+                          </button>
+
+                          {/* Send / Resend Luxury Confirmation Email Button */}
+                          <button
+                            type="button"
+                            disabled={sendingEmailId === b.id}
+                            onClick={() => handleSendEmail(b)}
+                            title={b.guest_email ? `Send Confirmation Email to ${b.guest_email}` : 'No email address on file'}
+                            className="p-1.5 rounded-xl border border-[#EAEFF4] hover:border-[#135846] text-gray-500 hover:text-[#135846] hover:bg-[#EBF7F2] transition-colors disabled:opacity-40"
+                          >
+                            {sendingEmailId === b.id ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#135846]" />
+                            ) : (
+                              <Mail className="w-3.5 h-3.5" />
+                            )}
                           </button>
 
                           {/* Quick Check-In Button */}

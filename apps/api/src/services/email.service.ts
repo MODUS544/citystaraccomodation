@@ -88,6 +88,9 @@ class EmailService {
           tls: {
             rejectUnauthorized: false,
           },
+          connectionTimeout: 6000,
+          greetingTimeout: 6000,
+          socketTimeout: 6000,
         });
         this.isConfigured = true;
         this.provider = 'smtp';
@@ -131,6 +134,9 @@ class EmailService {
               pass: conf.pass,
             },
             tls: { rejectUnauthorized: false },
+            connectionTimeout: 6000,
+            greetingTimeout: 6000,
+            socketTimeout: 6000,
           });
           this.isConfigured = true;
           this.provider = 'smtp';

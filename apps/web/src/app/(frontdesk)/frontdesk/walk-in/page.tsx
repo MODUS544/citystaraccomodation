@@ -181,6 +181,29 @@ export default function WalkInPage() {
       queryClient.invalidateQueries({ queryKey: ['walk-in-available-rooms'] });
       queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
       setFormError(null);
+
+      // Dispatch luxury reservation confirmation email if guest email provided
+      if (email && email.includes('@')) {
+        const selectedRoomType = availableRooms.find((r) => r.room_type_id === selectedRoomTypeId);
+        fetch('/api/send-reservation-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingReference: data?.booking_reference || data?.booking?.booking_reference || 'CH.WALKIN',
+            guestName: fullName.trim(),
+            guestEmail: email.trim(),
+            guestPhone: phoneNumber.trim(),
+            roomName: selectedRoomType?.room_type_name || 'Standard Suite',
+            roomNumber: keyNumber.trim() || undefined,
+            checkInDate,
+            checkOutDate,
+            totalNights: totalNights || 1,
+            totalAmount: data?.total_amount || totalPrice,
+            paymentStatus: 'Reservation confirmed',
+            specialRequests: specialRequests || undefined,
+          }),
+        }).catch((e) => console.warn('[WalkIn] Async email confirmation warning:', e));
+      }
     },
     onError: (err: any) => {
       const msg =

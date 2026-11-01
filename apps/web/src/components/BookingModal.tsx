@@ -93,12 +93,11 @@ export function BookingModal({
         guestPhone: phone,
       });
 
-      // Extract generated booking code (e.g. CS-MAID-98421)
+      // Extract official booking reference (e.g. CH.TXOOQ)
       const bookingCode =
-        bookingData.booking_reference?.startsWith('CS-MAID-')
-          ? bookingData.booking_reference
-          : (bookingData as any).booking_code ||
-            `CS-MAID-${Math.floor(10000 + Math.random() * 90000)}`;
+        bookingData.booking_reference ||
+        (bookingData as any).booking_code ||
+        `CH.${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
       setReservedBooking({
         bookingCode,
@@ -110,6 +109,28 @@ export function BookingModal({
         checkIn,
         checkOut,
       });
+
+      // Dispatch luxury reservation confirmation email directly to the guest
+      if (email && email.includes('@')) {
+        fetch('/api/send-reservation-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bookingReference: bookingCode,
+            guestName: fullName.trim() || 'Valued Guest',
+            guestEmail: email.trim(),
+            guestPhone: phone.trim() || '—',
+            roomName: room.name,
+            checkInDate: checkIn,
+            checkOutDate: checkOut,
+            totalNights: nights,
+            totalAmount: grandTotal,
+            specialRequests: specialRequests || undefined,
+          }),
+        }).catch((emailErr) => {
+          console.warn('[BookingModal] Async reservation email dispatch note:', emailErr);
+        });
+      }
     } catch (err: any) {
       if (err.message && err.message.includes('DOUBLE_BOOKING_CONFLICT')) {
         setErrorMsg('This suite is already reserved for the selected dates. Please adjust your dates.');
