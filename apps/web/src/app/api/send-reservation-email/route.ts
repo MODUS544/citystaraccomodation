@@ -114,39 +114,29 @@ export async function POST(req: NextRequest) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reservation Confirmation - City Star Hotel & Accomodation</title>
+  <title>Reservation Confirmation - City Star Hotel</title>
   <style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: #0B1E19;
+      background-color: #F4F5F7;
       margin: 0;
-      padding: 24px 12px;
+      padding: 28px 12px;
       color: #1E2538;
       -webkit-font-smoothing: antialiased;
     }
     .wrapper {
-      max-width: 600px;
+      max-width: 580px;
       margin: 0 auto;
       background: #ffffff;
-      border-radius: 20px;
+      border-radius: 16px;
       overflow: hidden;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.35);
+      border: 1px solid #E5E7EB;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     }
-    .header {
-      background: linear-gradient(135deg, #071310 0%, #0E2922 50%, #135846 100%);
-      padding: 36px 24px 28px 24px;
+    .logo-header {
+      padding: 38px 24px 12px 24px;
       text-align: center;
-      border-bottom: 3px solid #D4AF37;
-    }
-    .logo-container {
-      width: 105px;
-      height: 105px;
-      margin: 0 auto 16px auto;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 2px solid #D4AF37;
-      background: #0A101D;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+      background: #ffffff;
     }
     .logo-img {
       width: 105px;
@@ -154,64 +144,44 @@ export async function POST(req: NextRequest) {
       object-fit: contain;
       display: block;
       margin: 0 auto;
-    }
-    .title {
-      color: #D4AF37;
-      font-family: Georgia, 'Times New Roman', serif;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin: 0;
-      line-height: 1.25;
-      text-align: center;
-    }
-    .sub-title {
-      color: #E2E8F0;
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-top: 8px;
-      font-weight: 600;
-      opacity: 0.95;
-      text-align: center;
+      border-radius: 12px;
     }
     .body-content {
-      padding: 32px 28px;
+      padding: 20px 32px 36px 32px;
     }
     .salutation {
       font-size: 16px;
       font-weight: 700;
-      color: #135846;
+      color: #111827;
       margin-bottom: 12px;
     }
     .intro-text {
       font-size: 14.5px;
       color: #374151;
       line-height: 1.7;
-      margin: 0 0 20px 0;
+      margin: 0 0 24px 0;
     }
     .ref-box {
-      background: #F4F8F6;
-      border: 2px dashed #135846;
+      background: #F9FAFB;
+      border: 2px dashed #D1D5DB;
       border-radius: 12px;
-      padding: 16px;
+      padding: 18px;
       text-align: center;
       margin: 24px 0;
     }
     .ref-title {
       font-size: 11px;
       font-weight: 700;
-      color: #718096;
+      color: #6B7280;
       text-transform: uppercase;
       letter-spacing: 2px;
     }
     .ref-code {
       font-family: 'Courier New', Courier, monospace;
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 900;
-      color: #135846;
-      letter-spacing: 3px;
+      color: #111827;
+      letter-spacing: 4px;
       margin-top: 6px;
     }
     .details-table {
@@ -220,39 +190,44 @@ export async function POST(req: NextRequest) {
       margin-top: 10px;
     }
     .details-table td {
-      padding: 12px 14px;
+      padding: 12px 0;
       font-size: 14px;
-      border-bottom: 1px solid #F0F2F5;
+      border-bottom: 1px solid #F3F4F6;
     }
     .col-label {
       color: #6B7280;
-      width: 42%;
+      width: 38%;
       font-weight: 600;
     }
     .col-val {
       color: #111827;
       font-weight: 700;
+      text-align: right;
     }
     .total-row td {
-      border-bottom: 2px solid #135846;
+      border-bottom: 2px solid #111827;
       padding-top: 16px;
       padding-bottom: 16px;
-      font-size: 16px;
+    }
+    .total-row .col-label {
+      font-size: 15px;
+      font-weight: 800;
+      color: #111827;
     }
     .total-row .col-val {
-      color: #135846;
-      font-size: 19px;
+      color: #111827;
+      font-size: 18px;
       font-weight: 900;
     }
     .instructions-card {
       margin-top: 24px;
       background: #FFFBEB;
-      border-left: 4px solid #D4AF37;
+      border-left: 4px solid #D97706;
       padding: 14px 18px;
       border-radius: 0 8px 8px 0;
       font-size: 13.5px;
       line-height: 1.6;
-      color: #78350F;
+      color: #92400E;
       font-weight: 600;
     }
     .signoff {
@@ -263,30 +238,26 @@ export async function POST(req: NextRequest) {
     }
     .footer {
       background: #F9FAFB;
-      padding: 22px;
+      padding: 20px 24px;
       text-align: center;
       font-size: 11.5px;
       color: #9CA3AF;
-      border-top: 1px solid #E5E7EB;
+      border-top: 1px solid #F3F4F6;
       line-height: 1.5;
     }
   </style>
 </head>
 <body>
   <div class="wrapper">
-    <div class="header">
-      <!-- Top Center City Star Logo -->
-      <div class="logo-container">
-        <img class="logo-img" src="cid:citystarlogo" alt="City Star Hotel Logo" />
-      </div>
-      <h1 class="title">CITY STAR HOTEL & ACCOMODATION</h1>
-      <div class="sub-title">MAIDUGURI • BORNO STATE •</div>
+    <!-- Clean Top Center City Star Logo (Zero green or color background) -->
+    <div class="logo-header">
+      <img class="logo-img" src="cid:citystarlogo" alt="City Star Hotel Logo" width="105" height="105" />
     </div>
 
     <div class="body-content">
       <div class="salutation">Dear ${guestName},</div>
       <p class="intro-text">
-        We are honored to confirm your luxury reservation at City Star restaurants & accomodation. We have reserved your suite and look forward to welcoming you to City Star Hotel
+        We are honored to confirm your luxury reservation at City Star Hotel. We have reserved your suite and look forward to welcoming you to City Star Hotel.
       </p>
 
       <div class="ref-box">
@@ -304,12 +275,16 @@ export async function POST(req: NextRequest) {
           <td class="col-val">${guestPhone || '—'}</td>
         </tr>
         <tr>
+          <td class="col-label">Email:</td>
+          <td class="col-val">${email}</td>
+        </tr>
+        <tr>
           <td class="col-label">Suite / Category:</td>
           <td class="col-val">${roomDisplay}</td>
         </tr>
         <tr>
           <td class="col-label">Status:</td>
-          <td class="col-val" style="color: #135846;">Reservation confirmed</td>
+          <td class="col-val" style="color: #16A34A;">Reservation confirmed</td>
         </tr>
         <tr class="total-row">
           <td class="col-label">Total Amount:</td>
@@ -323,13 +298,13 @@ export async function POST(req: NextRequest) {
 
       <div class="signoff">
         Warm regards,<br/>
-        <strong style="color: #135846; font-size: 15px;">City Star Hotel & Accomodation</strong><br/>
+        <strong style="color: #111827; font-size: 15px;">City Star Hotel & Accomodation</strong><br/>
         <span style="font-size: 12px; color: #6B7280;">Yerwa / Yerima Road, Maiduguri, Borno State, Nigeria</span>
       </div>
     </div>
 
     <div class="footer">
-      Premier 5-Star Luxury Hospitality & Fine Dining in the Kanem-Borno Heart<br/>
+      Premier 5-Star Luxury Hospitality & Fine Dining in Maiduguri, Borno State<br/>
       &copy; 2026 City Star Hotel & Accomodation. All rights reserved.
     </div>
   </div>
@@ -342,13 +317,14 @@ MAIDUGURI • BORNO STATE •
 
 Dear ${guestName},
 
-We are honored to confirm your luxury reservation at City Star restaurants & accomodation. We have reserved your suite and look forward to welcoming you to City Star Hotel 
+We are honored to confirm your luxury reservation at City Star Hotel. We have reserved your suite and look forward to welcoming you to City Star Hotel.
 
 YOUR OFFICIAL BOOKING REFERENCE
 ${bookingReference}
 
 Guest Name:	${guestName}
 Phone Number:	${guestPhone || '—'}
+Email:	${email}
 Suite / Category:	${roomDisplay}
 Status:	Reservation confirmed
 Total Amount:	${formattedAmount}
